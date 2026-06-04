@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-
+import { AuthProvider } from "@/context/AuthContext";
 export const metadata: Metadata = {
   title: "VNA Frontend",
   description: "VNA Application",
@@ -12,9 +12,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-background text-foreground font-sans antialiased">
-        {children}
+    <html lang="vi">
+      <body>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
