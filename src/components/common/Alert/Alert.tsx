@@ -9,7 +9,13 @@ interface AlertProps {
   className?: string;
 }
 
-export function Alert({ variant = "info", title, message, onClose, className }: AlertProps) {
+export function Alert({
+  variant = "info",
+  title,
+  message,
+  onClose,
+  className,
+}: AlertProps) {
   const variants = {
     success: {
       container: "bg-success/10 border-success/20 text-success-foreground",
@@ -17,7 +23,8 @@ export function Alert({ variant = "info", title, message, onClose, className }: 
       border: "border-l-success",
     },
     error: {
-      container: "bg-destructive/10 border-destructive/20 text-destructive-foreground",
+      container:
+        "bg-destructive/10 border-destructive/20 text-destructive-foreground",
       icon: <AlertCircle className="w-5 h-5 text-destructive" />,
       border: "border-l-destructive",
     },
@@ -41,17 +48,24 @@ export function Alert({ variant = "info", title, message, onClose, className }: 
         "relative w-full rounded-lg border p-4 border-l-4",
         container,
         border,
-        className
+        className,
       )}
       role="alert"
     >
-      <div className="flex gap-3">
-        <div className="flex-shrink-0 mt-0.5">{icon}</div>
+      <div className="flex items-center gap-3">
+        <div className="flex-shrink-0">{icon}</div>
         <div className="flex-1">
-          <h5 className={cn("font-medium leading-none tracking-tight text-foreground", message && "mb-1")}>
+          <h5
+            className={cn(
+              "font-medium leading-tight text-foreground",
+              message && "mb-1",
+            )}
+          >
             {title}
           </h5>
-          {message && <div className="text-sm text-muted-foreground">{message}</div>}
+          {message && (
+            <div className="text-sm text-muted-foreground">{message}</div>
+          )}
         </div>
         {onClose && (
           <button
