@@ -24,7 +24,7 @@ export default function LoginPage() {
       setAlertMsg(MESSAGES.AUTH.LOGIN_REQUIRED_FIELDS);
       return;
     }
-    await login({ username, password });
+    await login({ username, password, rememberMe });
   };
 
   return (
