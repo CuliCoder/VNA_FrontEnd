@@ -5,8 +5,8 @@ export const ROUTES = {
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
 
-  DASHBOARD: "/",
-  ACCOUNT: "/account",
+  DASHBOARD: "/dashboard/profile",
+  ACCOUNT: "/dashboard/profile",
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];

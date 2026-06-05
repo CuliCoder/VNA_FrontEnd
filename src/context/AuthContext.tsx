@@ -5,7 +5,7 @@ import { getCachedUser, clearAuthData } from "@/lib/auth";
 import type { AuthState, LoginRequest, User } from "@/types/auth";
 
 interface AuthContextValue extends AuthState {
-  login: (payload: LoginRequest) => Promise<void>;
+  login: (payload: LoginRequest) => Promise<User>;
   logout: () => Promise<void>;
   setUser: (user: User) => void;
 }
@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (payload: LoginRequest) => {
     const { user } = await authService.login(payload);
     setState({ user, isAuthenticated: true, isLoading: false });
+    return user;
   };
 
   const logout = async () => {

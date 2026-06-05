@@ -17,4 +17,14 @@ export const API_ENDPOINTS = {
     RESET_PASSWORD: "/auth/reset-password",
     ME: "/users/me",
   },
+  USERS: {
+    PROFILE: "/users/profile",
+    CHANGE_PASSWORD: "/users/change-password",
+    EMAIL_CHANGE_REQUEST: "/users/email-change/request",
+    EMAIL_CHANGE_VERIFY: "/users/email-change/verify",
+    EMAIL_CHANGE_UPDATE: "/users/email-change/update",
+  },
+  BUSINESS: {
+    CREATE: "/business",
+  }
 } as const;
