@@ -1,81 +1,40 @@
-// This is a minimal implementation for the required endpoints
+import apiClient from "@/lib/api";
+import { API_ENDPOINTS } from "@/constants/apiConfig";
+import type { User } from "@/types/auth";
+import type { ApiResponse } from "@/types/api";
 
-// Mock types
-export interface UserProfile {
-  username: string;
-  fullName: string;
-  dob: string;
-  gender: string;
-  jobTitle: string;
-  role: string;
-  email: string;
-  province: string;
-  ward: string;
-  address: string;
-  isActive: boolean;
-  avatarUrl?: string;
+export interface UpdateProfileRequest {
+  fullName?: string;
+  birthDate?: string;
+  gender?: string;
+  position?: string;
+  provinceId?: number;
+  wardId?: number;
+  address?: string;
+  isActive?: boolean;
 }
 
-// Simulated API calls
 export const userService = {
-  getProfile: async (): Promise<UserProfile> => {
-    // GET /api/users/me
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          username: "Vna25112020",
-          fullName: "Phan Thanh Tùng",
-          dob: "1995-06-01",
-          gender: "male",
-          jobTitle: "",
-          role: "admin",
-          email: "phanthanhntung093@gmail.com",
-          province: "HCM",
-          ward: "GV",
-          address: "",
-          isActive: true,
-        });
-      }, 500);
-    });
+  getProfile: async (): Promise<User> => {
+    const { data } = await apiClient.get<ApiResponse<User>>(API_ENDPOINTS.AUTH.ME);
+    return data.data;
   },
 
-  updateProfile: async (data: Partial<UserProfile>): Promise<void> => {
-    // PUT /api/users/profile
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        console.log("Profile updated:", data);
-        resolve();
-      }, 500);
-    });
+  updateProfile: async (payload: UpdateProfileRequest): Promise<User> => {
+    const { data } = await apiClient.put<ApiResponse<User>>(API_ENDPOINTS.USERS.PROFILE, payload);
+    return data.data;
   },
 
   requestEmailChange: async (): Promise<void> => {
-    // POST /api/users/email-change/request
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        console.log("Email change requested, OTP sent");
-        resolve();
-      }, 500);
-    });
+    await apiClient.post(API_ENDPOINTS.USERS.EMAIL_CHANGE_REQUEST);
   },
 
   verifyEmailChangeOtp: async (otp: string): Promise<boolean> => {
-    // POST /api/users/email-change/verify
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        console.log("OTP verified:", otp);
-        resolve(otp === "123456");
-      }, 500);
-    });
+    const { data } = await apiClient.post<{ success: boolean }>(API_ENDPOINTS.USERS.EMAIL_CHANGE_VERIFY, { otp });
+    return data.success;
   },
 
   updateEmail: async (newEmail: string): Promise<void> => {
-    // POST /api/users/email-change/update
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        console.log("Email updated:", newEmail);
-        resolve();
-      }, 500);
-    });
+    await apiClient.post(API_ENDPOINTS.USERS.EMAIL_CHANGE_UPDATE, { email: newEmail });
   }
 };
