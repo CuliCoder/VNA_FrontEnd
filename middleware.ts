@@ -15,13 +15,13 @@ export function middleware(request: NextRequest) {
   const isPrivate = PRIVATE_ROUTES.some((r) => pathname.startsWith(r));
   // const isPrivate =
   //   pathname === "/" || PRIVATE_ROUTES.some((r) => pathname.startsWith(r));
-  // if (pathname === "/") {
-  //   if (isAuthenticated) {
-  //     return NextResponse.redirect(new URL("/dashboard/profile", request.url));
-  //   } else {
-  //     return NextResponse.redirect(new URL("/login", request.url));
-  //   }
-  // }
+  if (pathname === "/") {
+    if (isAuthenticated) {
+      return NextResponse.redirect(new URL("/dashboard/profile", request.url));
+    } else {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+  }
   if (isAuthenticated && isPublicOnly) {
     return NextResponse.redirect(new URL("/dashboard/profile", request.url));
   }
