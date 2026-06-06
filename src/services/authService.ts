@@ -15,12 +15,18 @@ import type {
 
 export const authService = {
   async login(payload: LoginRequest): Promise<LoginResponse> {
-    const { data } = await apiClient.post<LoginResponse>(
-      API_ENDPOINTS.AUTH.LOGIN,
-      payload,
-    );
-    storage.setUser(data.user);
-    return data;
+    try {
+
+      const response = await apiClient.post(
+        API_ENDPOINTS.AUTH.LOGIN,
+        payload,
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("LOGIN ERROR", error);
+      throw error;
+    }
   },
 
   async logout(): Promise<void> {
@@ -39,11 +45,11 @@ export const authService = {
   },
 
   async getMe(): Promise<User> {
-    const { data } = await apiClient.get<ApiResponse<User>>(
-      API_ENDPOINTS.AUTH.ME,
-    );
-    storage.setUser(data.data);
-    return data.data;
+    const { data } = await apiClient.get(API_ENDPOINTS.AUTH.ME);
+
+    storage.setUser(data.user);
+
+    return data.user;
   },
 
   async forgotPassword(

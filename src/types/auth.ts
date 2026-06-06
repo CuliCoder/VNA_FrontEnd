@@ -1,12 +1,20 @@
+// ─── Permission ───────────────────────────────────────────────────────────────
+export interface Permission {
+  id: number;
+  code: string; // "USER_MANAGE" | "REPORT_VIEW" | ...
+  name: string;
+}
+
 // ─── Role ─────────────────────────────────────────────────────────────────────
 export interface Role {
   id: number;
-  code: string; // "ADMIN" | "ENTERPRISE" | "INSPECTOR" | ...
+  code: string; // "ADMIN" | "ENTERPRISE" | "MANAGER" | "INSPECTOR" | ...
   name: string; // "Quản trị viên" | ...
   description: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  permissions?: Permission[];
 }
 
 // ─── User ─────────────────────────────────────────────────────────────────────

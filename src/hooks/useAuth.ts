@@ -59,11 +59,15 @@ export function useAuth() {
     options?: LoginOptions,
   ): Promise<boolean> => {
     const result = await withLoading(async () => {
-      await auth.login(payload);
+      const loggedInUser = await auth.login(payload);
       if (options?.onSuccess) {
         options.onSuccess();
       } else {
-        window.location.href = options?.redirectTo ?? ROUTES.DASHBOARD;
+        let defaultRoute: string = ROUTES.DASHBOARD;
+        if (loggedInUser?.role?.code === "ENTERPRISE") {
+          defaultRoute = "/dashboard/business/create";
+        }
+        window.location.href = options?.redirectTo ?? defaultRoute;
       }
     });
     return result !== null;
