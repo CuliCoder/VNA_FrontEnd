@@ -14,7 +14,6 @@ const apiClient = axios.create({
 const AUTH_ENDPOINTS_NO_REDIRECT = [
   API_ENDPOINTS.AUTH.LOGIN,
   API_ENDPOINTS.AUTH.REFRESH_TOKEN,
-  API_ENDPOINTS.AUTH.ME,
 ];
 
 function isAuthEndpoint(url?: string): boolean {
@@ -71,7 +70,9 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError);
         storage.clearAll();
-        window.location.href = "/login";
+        if (!window.location.pathname.startsWith("/login")) {
+          window.location.href = "/login";
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
