@@ -30,7 +30,7 @@ export function Modal({ open, onClose, title, children, footer, size = "md" }: M
           )}
         >
           <div className="flex flex-col space-y-1.5 text-center sm:text-left">
-            <DialogPrimitive.Title className="text-lg font-semibold leading-none tracking-tight">
+            <DialogPrimitive.Title className="text-lg font-semibold leading-none tracking-tight text-center">
               {title}
             </DialogPrimitive.Title>
             <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">

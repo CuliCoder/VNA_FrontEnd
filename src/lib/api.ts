@@ -11,7 +11,6 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
-// Các endpoint không áp dụng auto-refresh/redirect khi 401
 const AUTH_ENDPOINTS_NO_REDIRECT = [
   API_ENDPOINTS.AUTH.LOGIN,
   API_ENDPOINTS.AUTH.REFRESH_TOKEN,
@@ -32,7 +31,7 @@ let failedQueue: Array<{
 
 function processQueue(error: unknown) {
   failedQueue.forEach(({ resolve, reject }) =>
-    error ? reject(error) : resolve()
+    error ? reject(error) : resolve(),
   );
   failedQueue = [];
 }
@@ -65,7 +64,7 @@ apiClient.interceptors.response.use(
         await axios.post<RefreshTokenResponse>(
           `${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.REFRESH_TOKEN}`,
           {},
-          { withCredentials: true }
+          { withCredentials: true },
         );
         processQueue(null);
         return apiClient(originalRequest);
@@ -89,7 +88,7 @@ apiClient.interceptors.response.use(
     };
 
     return Promise.reject(apiError);
-  }
+  },
 );
 
 export default apiClient;

@@ -38,7 +38,14 @@ export interface User {
   role: Role;
   enterpriseProfile: unknown | null;
 }
-
+export interface ChangeEmailVerificationResponse {
+  message: string;
+  verificationToken: string;
+}
+export interface ChangeEmailSuccessResponse {
+  message: string;
+  user: User;
+}
 // ─── Auth requests ─────────────────────────────────────────────────────────────
 export interface LoginRequest {
   username: string;

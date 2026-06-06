@@ -8,7 +8,9 @@ export default function ProfilePage() {
     <div className="max-w-5xl mx-auto space-y-5">
       {/* Top action bar */}
       <div className="flex items-center justify-between bg-white px-6 py-3.5 rounded-xl shadow-sm border border-gray-100">
-        <h1 className="text-base font-semibold text-gray-800">Chi tiết người dùng</h1>
+        <h1 className="text-base font-semibold text-gray-800">
+          Chi tiết người dùng
+        </h1>
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -21,7 +23,14 @@ export default function ProfilePage() {
             form="account-form"
             className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition shadow-sm flex items-center gap-1.5"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
               <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
               <polyline points="17 21 17 13 7 13 7 21" />
               <polyline points="7 3 7 8 15 8" />
