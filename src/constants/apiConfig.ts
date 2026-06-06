@@ -12,7 +12,7 @@ export const API_ENDPOINTS = {
     LOGIN: "/auth/login",
     LOGOUT: "/auth/logout",
     REGISTER: "/auth/register",
-    REFRESH_TOKEN: "/auth/refresh-token",
+    REFRESH_TOKEN: "/auth/refresh",
     FORGOT_PASSWORD: "/auth/forgot-password",
     RESET_PASSWORD: "/auth/reset-password",
     ME: "/users/me",
@@ -23,6 +23,7 @@ export const API_ENDPOINTS = {
     EMAIL_CHANGE_REQUEST: "/users/email-change/request",
     EMAIL_CHANGE_VERIFY: "/users/email-change/verify",
     EMAIL_CHANGE_UPDATE: "/users/email-change/update",
+    UPLOAD_AVATAR: "/users/avatar",
   },
   BUSINESS: {
     CREATE: "/business",
