@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -29,9 +29,8 @@ interface AccountFormProps {
   onSaveSuccess?: () => void;
 }
 
-export default function AccountForm({ onSaveSuccess }: AccountFormProps) {
-  const { user, setUser, isLoading } = useAuth();
-  const [isSaving, setIsSaving] = useState(false);
+export default memo(function AccountForm({ onSaveSuccess }: AccountFormProps) {
+  const { user, setUser } = useAuth();
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -65,6 +64,7 @@ export default function AccountForm({ onSaveSuccess }: AccountFormProps) {
   } = useForm<AccountFormValues>({
     resolver: zodResolver(accountSchema),
   });
+
   const avatarUrl = useWatch({ control, name: "avatarUrl" });
 
   useEffect(() => {
@@ -85,7 +85,6 @@ export default function AccountForm({ onSaveSuccess }: AccountFormProps) {
   }, [user, reset]);
 
   const onSubmit = async (data: AccountFormValues) => {
-    setIsSaving(true);
     setSaveError(null);
     setSaveSuccess(false);
     try {
@@ -107,7 +106,6 @@ export default function AccountForm({ onSaveSuccess }: AccountFormProps) {
     } catch {
       setSaveError("Không thể cập nhật thông tin. Vui lòng thử lại.");
     } finally {
-      setIsSaving(false);
     }
   };
 
@@ -436,4 +434,4 @@ export default function AccountForm({ onSaveSuccess }: AccountFormProps) {
       </div>
     </form>
   );
-}
+});

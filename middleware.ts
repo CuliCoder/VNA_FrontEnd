@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_ONLY_ROUTES = ["/login", "/register", "/forgot-password"];
+const PUBLIC_ONLY_ROUTES = ["/login", "/register", "/ForgotPassword"];
 
-const PRIVATE_ROUTES = ["/dashboard/profile", "/settings"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -12,9 +11,8 @@ export function middleware(request: NextRequest) {
   const isAuthenticated = Boolean(accessToken);
 
   const isPublicOnly = PUBLIC_ONLY_ROUTES.some((r) => pathname.startsWith(r));
-  const isPrivate = PRIVATE_ROUTES.some((r) => pathname.startsWith(r));
-  // const isPrivate =
-  //   pathname === "/" || PRIVATE_ROUTES.some((r) => pathname.startsWith(r));
+  const isPrivate = !isPublicOnly;
+
   if (pathname === "/") {
     if (isAuthenticated) {
       return NextResponse.redirect(new URL("/dashboard/profile", request.url));
@@ -34,3 +32,8 @@ export function middleware(request: NextRequest) {
 
   return NextResponse.next();
 }
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};

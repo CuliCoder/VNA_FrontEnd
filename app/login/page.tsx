@@ -77,7 +77,7 @@ export default function LoginPage() {
             <span className="text-sm text-gray-600">Nhớ đăng nhập</span>
           </label>
           <a
-            href="/ForgotPasswordPage"
+            href="/ForgotPassword"
             className="text-sm text-blue-600 hover:text-blue-700 hover:underline font-medium"
           >
             Quên mật khẩu

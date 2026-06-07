@@ -1,8 +1,5 @@
 "use client";
-
-import React from "react";
 import AccountForm from "@/components/profile/AccountForm";
-
 export default function ProfilePage() {
   return (
     <div className="max-w-5xl mx-auto space-y-5">
