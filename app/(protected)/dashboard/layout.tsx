@@ -32,22 +32,23 @@ export default function DashboardLayout({
     }
   }, [isAuthenticated, isLoading, router]);
 
-  if (isLoading) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center">
-        Đang tải...
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated && !isLoading) return null;
 
   return (
     <div className="flex h-screen bg-[#f3f4f6]">
       <Sidebar />
       <main className="flex-1 overflow-hidden flex flex-col">
-        {/* Top Header if needed can be placed here, or handled within the pages */}
-        <div className="flex-1 overflow-y-auto p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto p-6 relative">
+          {/* Loading overlay — không unmount children */}
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
+              Đang tải...
+            </div>
+          )}
+          <div style={{ visibility: isLoading ? "hidden" : "visible" }}>
+            {children}
+          </div>
+        </div>
       </main>
       <ChangePasswordModal
         open={showChangePassword}

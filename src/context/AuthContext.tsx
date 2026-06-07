@@ -1,7 +1,6 @@
-'use client';
+"use client";
 import * as React from "react";
 import { authService } from "@/services/authService";
-import { getCachedUser, clearAuthData } from "@/lib/auth";
 import type { AuthState, LoginRequest, User } from "@/types/auth";
 
 interface AuthContextValue extends AuthState {
@@ -18,24 +17,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: false,
     isLoading: true,
   });
-
-
   React.useEffect(() => {
-    const cached = getCachedUser();
-    if (cached) {
-      setState({ user: cached, isAuthenticated: true, isLoading: true });
-    }
-
     authService
       .getMe()
-      .then((user) => {
-        setState({ user, isAuthenticated: true, isLoading: false });
-      })
-      .catch(() => {
-        // Session hết hạn hoặc chưa đăng nhập
-        clearAuthData();
-        setState({ user: null, isAuthenticated: false, isLoading: false });
-      });
+      .then((user) =>
+        setState({ user, isAuthenticated: true, isLoading: false }),
+      )
+      .catch(() =>
+        setState({ user: null, isAuthenticated: false, isLoading: false }),
+      );
   }, []);
 
   const login = async (payload: LoginRequest) => {

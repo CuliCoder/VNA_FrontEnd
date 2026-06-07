@@ -16,12 +16,7 @@ import type {
 export const authService = {
   async login(payload: LoginRequest): Promise<LoginResponse> {
     try {
-
-      const response = await apiClient.post(
-        API_ENDPOINTS.AUTH.LOGIN,
-        payload,
-      );
-
+      const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN, payload);
       return response.data;
     } catch (error) {
       console.error("LOGIN ERROR", error);
@@ -46,9 +41,6 @@ export const authService = {
 
   async getMe(): Promise<User> {
     const { data } = await apiClient.get(API_ENDPOINTS.AUTH.ME);
-
-    storage.setUser(data.user);
-
     return data.user;
   },
 
