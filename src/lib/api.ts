@@ -70,7 +70,11 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError);
         storage.clearAll();
-        if (!window.location.pathname.startsWith("/login")) {
+        const publicRoutes = ["/login", "/register", "/ForgotPassword"];
+        const isPublic = publicRoutes.some((r) =>
+          window.location.pathname.startsWith(r),
+        );
+        if (!isPublic) {
           window.location.href = "/login";
         }
         return Promise.reject(refreshError);
