@@ -10,6 +10,7 @@ import { userService } from "@/services/userService";
 import { useAddress } from "@/hooks/useAddress";
 import { changeEmailEvents } from "@/hooks/useModal";
 import { UpdateProfileRequest } from "@/types/user";
+import { toast } from "sonner";
 const accountSchema = z.object({
   fullName: z.string().min(1, "Họ và tên là bắt buộc"),
   birthDate: z.string().optional(),
@@ -31,8 +32,6 @@ interface AccountFormProps {
 
 export default memo(function AccountForm({ onSaveSuccess }: AccountFormProps) {
   const { user, setUser } = useAuth();
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const {
@@ -85,8 +84,6 @@ export default memo(function AccountForm({ onSaveSuccess }: AccountFormProps) {
   }, [user, reset]);
 
   const onSubmit = async (data: AccountFormValues) => {
-    setSaveError(null);
-    setSaveSuccess(false);
     try {
       const payload: UpdateProfileRequest = {
         fullName: data.fullName,
@@ -101,11 +98,10 @@ export default memo(function AccountForm({ onSaveSuccess }: AccountFormProps) {
       };
       const updated = await userService.updateProfile(payload);
       setUser(updated);
-      setSaveSuccess(true);
+      toast.success("Cập nhật thông tin thành công!");
       onSaveSuccess?.();
     } catch {
-      setSaveError("Không thể cập nhật thông tin. Vui lòng thử lại.");
-    } finally {
+      toast.error("Không thể cập nhật thông tin. Vui lòng thử lại.");
     }
   };
 
@@ -129,24 +125,23 @@ export default memo(function AccountForm({ onSaveSuccess }: AccountFormProps) {
     // Validate
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
     if (!allowedTypes.includes(file.type)) {
-      setSaveError("Chỉ chấp nhận file *.jpeg, *.jpg, *.png");
+      toast.error("Chỉ chấp nhận file *.jpeg, *.jpg, *.png");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setSaveError("Kích thước ảnh tối đa 5 MB");
+      toast.error("Kích thước ảnh tối đa 5 MB");
       return;
     }
 
     setIsUploadingAvatar(true);
     try {
-      // Nếu backend có endpoint upload riêng:
       const formData = new FormData();
       formData.append("file", file);
       const res = await userService.uploadAvatar(formData);
       setValue("avatarUrl", res, { shouldDirty: true });
       setUser({ ...user, avatarUrl: res });
     } catch {
-      setSaveError("Không thể tải ảnh lên. Vui lòng thử lại.");
+      toast.error("Không thể tải ảnh lên. Vui lòng thử lại.");
     } finally {
       setIsUploadingAvatar(false);
       // Reset input để có thể chọn lại cùng file
@@ -232,26 +227,7 @@ export default memo(function AccountForm({ onSaveSuccess }: AccountFormProps) {
 
       {/* Right Column */}
       <div className="flex-1 space-y-5">
-        {/* Save feedback */}
-        {saveSuccess && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-2.5 rounded-lg">
-            ✓ Cập nhật thông tin thành công!
-          </div>
-        )}
-        {saveError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2.5 rounded-lg flex justify-between">
-            <span>⚠ {saveError}</span>
-            <button
-              type="button"
-              onClick={() => setSaveError(null)}
-              className="ml-2 text-red-400 hover:text-red-600"
-            >
-              ✕
-            </button>
-          </div>
-        )}
-
-        {/* Personal Info */}
+          {/* Personal Info */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h2 className="text-sm font-semibold text-gray-800 mb-5 pb-3 border-b border-gray-100">
             Thông tin cá nhân

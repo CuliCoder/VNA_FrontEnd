@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Eye, Upload, Trash2 } from "lucide-react";
 import { businessService, BusinessProfileRequest } from "@/services/businessService";
+import { toast } from "sonner";
 
 const businessSchema = z.object({
   businessName: z.string().min(1, "Tên doanh nghiệp là bắt buộc"),
@@ -68,8 +69,6 @@ const ATTACHMENT_ROWS: AttachmentRow[] = [
 
 export default function BusinessForm() {
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [selectedProvince, setSelectedProvince] = useState("HCM");
 
   const {
@@ -85,8 +84,6 @@ export default function BusinessForm() {
 
   const onSubmit = async (data: BusinessFormValues) => {
     setIsSaving(true);
-    setSaveError(null);
-    setSaveSuccess(false);
     try {
       const payload: BusinessProfileRequest = {
         businessName: data.businessName,
@@ -107,9 +104,9 @@ export default function BusinessForm() {
         representativePhone: data.representativePhone,
       };
       await businessService.createBusiness(payload);
-      setSaveSuccess(true);
+      toast.success("Lưu thông tin doanh nghiệp thành công!");
     } catch {
-      setSaveError("Không thể lưu thông tin doanh nghiệp. Vui lòng thử lại.");
+      toast.error("Không thể lưu thông tin doanh nghiệp. Vui lòng thử lại.");
     } finally {
       setIsSaving(false);
     }
@@ -127,19 +124,6 @@ export default function BusinessForm() {
       
 
       <form id="business-form" onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-8">
-        {/* Feedback */}
-        {saveSuccess && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-2.5 rounded-lg">
-            ✓ Lưu thông tin doanh nghiệp thành công!
-          </div>
-        )}
-        {saveError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2.5 rounded-lg flex justify-between">
-            <span>⚠ {saveError}</span>
-            <button type="button" onClick={() => setSaveError(null)}>✕</button>
-          </div>
-        )}
-
         {/* Section 1: Basic Business Info */}
         <div className="space-y-4">
           <h2 className="text-sm font-bold text-gray-800 pb-2 border-b border-gray-100">Thêm mới doanh nghiệp</h2>

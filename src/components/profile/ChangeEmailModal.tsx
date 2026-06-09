@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Modal } from "@/components/common/Modal";
 import { InputField } from "@/components/common/InputField";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,7 +36,6 @@ const OTP_SECONDS = 60 * 5;
 export function ChangeEmailModal({ open, onClose }: Props) {
   const { user, setUser } = useAuth();
   const [step, setStep] = useState<Step>("otp");
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(OTP_SECONDS);
   const [resending, setResending] = useState(false);
 
@@ -72,7 +72,6 @@ export function ChangeEmailModal({ open, onClose }: Props) {
   const handleClose = () => {
     otpForm.reset();
     emailForm.reset();
-    setSubmitError(null);
     setStep("otp");
     setCountdown(OTP_SECONDS);
     onClose();
@@ -85,7 +84,7 @@ export function ChangeEmailModal({ open, onClose }: Props) {
       await userService.requestEmailChange();
       startCountdown();
     } catch {
-      setSubmitError("Không thể gửi lại OTP. Vui lòng thử lại.");
+      toast.error("Không thể gửi lại OTP. Vui lòng thử lại.");
     } finally {
       setResending(false);
     }
@@ -93,26 +92,24 @@ export function ChangeEmailModal({ open, onClose }: Props) {
 
   // Step 1: xác nhận OTP
   const onSubmitOtp = async (data: OtpValues) => {
-    setSubmitError(null);
     try {
       const res = await userService.verifyEmailChangeOtp(data.otp);
       emailForm.setValue("verificationToken", res.verificationToken);
       setStep("email");
     } catch {
-      setSubmitError("Mã OTP không đúng hoặc đã hết hạn.");
+      toast.error("Mã OTP không đúng hoặc đã hết hạn.");
     }
   };
 
-  // Step 2: lưu email mới
   const onSubmitEmail = async (data: EmailValues) => {
-    setSubmitError(null);
     try {
-      const user = await userService.updateEmail(data.newEmail, data.verificationToken);
+      const res = await userService.updateEmail(data.newEmail, data.verificationToken);
+      toast.success("Cập nhật email thành công!");
+      setUser(res.user);
       setStep("success");
-      setUser(user.user);
-      setTimeout(handleClose, 1500);
+      setTimeout(handleClose, 1000);
     } catch {
-      setSubmitError("Không thể cập nhật email. Vui lòng thử lại.");
+      toast.error("Không thể cập nhật email. Vui lòng thử lại.");
     }
   };
 
@@ -174,12 +171,6 @@ export function ChangeEmailModal({ open, onClose }: Props) {
       size="sm"
       footer={renderFooter()}
     >
-      {submitError && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2.5 rounded-lg">
-          ⚠ {submitError}
-        </div>
-      )}
-
       {step === "otp" && (
         <form
           id="otp-form"

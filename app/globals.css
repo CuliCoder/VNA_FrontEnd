@@ -116,3 +116,9 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+[data-sonner-toast] [data-close-button] {
+  left: unset !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
