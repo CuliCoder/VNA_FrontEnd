@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -20,7 +20,6 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const userRole = (user?.role?.code || "VIEWER") as RoleCode;
-
   // Auto-open the group that contains the current path
   const getInitialOpen = () => {
     const open: Record<string, boolean> = {};
@@ -46,7 +45,6 @@ export default function Sidebar() {
   );
 
   const avatarFallback = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" fill="%23ccc"/><circle cx="16" cy="12" r="5" fill="%23fff"/><path d="M7 26c0-5 4-9 9-9s9 4 9 9" fill="%23fff"/></svg>`;
-
   return (
     <aside
       className={cn(
