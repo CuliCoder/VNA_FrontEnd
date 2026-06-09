@@ -144,6 +144,7 @@ export default memo(function AccountForm({ onSaveSuccess }: AccountFormProps) {
       formData.append("file", file);
       const res = await userService.uploadAvatar(formData);
       setValue("avatarUrl", res, { shouldDirty: true });
+      setUser({ ...user, avatarUrl: res });
     } catch {
       setSaveError("Không thể tải ảnh lên. Vui lòng thử lại.");
     } finally {
