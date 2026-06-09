@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from "sonner";
 export const metadata: Metadata = {
   title: "VNA Frontend",
   description: "VNA Application",
@@ -15,6 +16,7 @@ export default function RootLayout({
     <html lang="vi">
       <body>
         <AuthProvider>{children}</AuthProvider>
+        <Toaster position="top-right" richColors closeButton duration={4000} />
       </body>
     </html>
   );
