@@ -1,21 +1,25 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Sidebar from "@/components/layouts/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/constants/routes";
 import { ChangePasswordModal } from "@/components/profile/ChangePasswordModal";
 import { ChangeEmailModal } from "@/components/profile/ChangeEmailModal";
+import { SIDEBAR_MENUS, MenuItem } from "@/constants/menus";
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showChangeEmail, setShowChangeEmail] = useState(false);
+
   useEffect(() => {
     const handler = () => setShowChangePassword(true);
     window.addEventListener("open-change-password", handler);
@@ -26,11 +30,47 @@ export default function DashboardLayout({
     window.addEventListener("open-change-email", handler);
     return () => window.removeEventListener("open-change-email", handler);
   }, []);
+
+  const userRole = user?.role?.code || "VIEWER";
+  const userPermissions = user?.role?.permissions?.map((p: any) => p.code) || [];
+
+  const hasAccess = (menu: MenuItem) => {
+    if (menu.roles && menu.roles.length > 0) {
+      if (menu.roles.includes(userRole as any)) return true;
+    }
+    if (menu.permissions && menu.permissions.length > 0) {
+      if (menu.permissions.some((p) => userPermissions.includes(p))) return true;
+    }
+    return false;
+  };
+
+  const checkAccessToPath = (path: string) => {
+    let foundMenu: MenuItem | null = null;
+    const findMenu = (menus: MenuItem[]) => {
+      for (const menu of menus) {
+        if (menu.url && path.startsWith(menu.url)) {
+          foundMenu = menu;
+        }
+        if (menu.children) findMenu(menu.children);
+      }
+    };
+    findMenu(SIDEBAR_MENUS);
+
+    if (foundMenu) {
+      return hasAccess(foundMenu);
+    }
+    return true; 
+  };
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push(ROUTES.LOGIN);
+    } else if (!isLoading && isAuthenticated && user) {
+      if (!checkAccessToPath(pathname)) {
+        router.push("/dashboard/profile");
+      }
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, pathname, userRole, userPermissions.join(','), user]);
 
   if (!isAuthenticated && !isLoading) return null;
 

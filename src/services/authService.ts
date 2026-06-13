@@ -15,13 +15,8 @@ import type {
 
 export const authService = {
   async login(payload: LoginRequest): Promise<LoginResponse> {
-    try {
-      const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN, payload);
-      return response.data;
-    } catch (error) {
-      console.error("LOGIN ERROR", error);
-      throw error;
-    }
+    const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN, payload);
+    return response.data;
   },
 
   async logout(): Promise<void> {
@@ -42,6 +37,11 @@ export const authService = {
   async getMe(): Promise<User> {
     const { data } = await apiClient.get(API_ENDPOINTS.AUTH.ME);
     return data.user;
+  },
+
+  async getPermissions(): Promise<{ roleCode: string; roleName: string; permissions: any[] }> {
+    const { data } = await apiClient.get(API_ENDPOINTS.AUTH.PERMISSIONS);
+    return data;
   },
 
   async forgotPassword(

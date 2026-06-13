@@ -70,6 +70,18 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError);
         storage.clearAll();
+
+        // Call logout to clear httpOnly cookies on the backend before redirecting
+        try {
+          await axios.post(
+            `${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.LOGOUT}`,
+            {},
+            { withCredentials: true }
+          );
+        } catch (e) {
+          // ignore
+        }
+
         const publicRoutes = ["/login", "/register", "/ForgotPassword"];
         const isPublic = publicRoutes.some((r) =>
           window.location.pathname.startsWith(r),
