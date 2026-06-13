@@ -6,6 +6,8 @@ import { MESSAGES } from "@/constants/messages";
 import { useAuth } from "@/hooks/useAuth";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { toast } from "sonner";
+import { authService } from "@/services/authService"
+import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
   const [username, setUsername] = React.useState("");
@@ -22,7 +24,9 @@ export default function LoginPage() {
       return;
     }
     try {
-      await login({ username, password, rememberMe });
+      const res = await authService.login({ username, password, rememberMe });
+      toast.success(res.message || "Đăng nhập thành công");
+      window.location.href = "/dashboard/profile";
     } catch (err) {
       const msg =
         (err as { message?: string })?.message ?? MESSAGES.COMMON.UNKNOWN_ERROR;

@@ -4,7 +4,7 @@ import React, { memo, useEffect, useRef, useState } from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Camera } from "lucide-react";
+import { Camera, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { userService } from "@/services/userService";
 import { useAddress } from "@/hooks/useAddress";
@@ -13,7 +13,9 @@ import { UpdateProfileRequest } from "@/types/user";
 import { toast } from "sonner";
 const accountSchema = z.object({
   fullName: z.string().min(1, "Họ và tên là bắt buộc"),
-  birthDate: z.string().optional(),
+  birthDate: z.string().optional().refine((val) => !val || /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/\d{4}$/.test(val), {
+    message: "Định dạng ngày không hợp lệ (DD/MM/YYYY)",
+  }),
   gender: z.string().optional(),
   position: z.string().optional(),
   provinceId: z.number().optional(),
@@ -70,7 +72,10 @@ export default memo(function AccountForm({ onSaveSuccess }: AccountFormProps) {
     if (user) {
       reset({
         fullName: user.fullName ?? "",
-        birthDate: user.birthDate?.split("T")[0] ?? "",
+        birthDate: user.birthDate ? (() => {
+          const [year, month, day] = user.birthDate.split("T")[0].split("-");
+          return `${day}/${month}/${year}`;
+        })() : "",
         gender: user.gender ?? "",
         position: user.position ?? "",
         provinceId: user.provinceId ?? undefined,
@@ -85,16 +90,23 @@ export default memo(function AccountForm({ onSaveSuccess }: AccountFormProps) {
 
   const onSubmit = async (data: AccountFormValues) => {
     try {
+      let apiBirthDate = null;
+      if (data.birthDate) {
+        const [day, month, year] = data.birthDate.split("/");
+        if (day && month && year) {
+          apiBirthDate = `${year}-${month}-${day}`;
+        }
+      }
+
       const payload: UpdateProfileRequest = {
         fullName: data.fullName,
-        birthDate: data.birthDate || null!,
+        birthDate: apiBirthDate || null!,
         gender: data.gender || null!,
         position: data.position || null!,
         provinceId: data.provinceId,
         wardId: data.wardId,
         address: data.address || null!,
         avatarUrl: data.avatarUrl || user?.avatarUrl || null,
-        phone: data.phone || user?.phone || null,
       };
       const updated = await userService.updateProfile(payload);
       setUser(updated);
@@ -210,14 +222,12 @@ export default memo(function AccountForm({ onSaveSuccess }: AccountFormProps) {
               <button
                 type="button"
                 onClick={() => onChange(!value)}
-                className={`w-11 h-6 rounded-full transition-all duration-200 relative outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
-                  value ? "bg-blue-600" : "bg-gray-200"
-                }`}
+                className={`w-11 h-6 rounded-full transition-all duration-200 relative outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${value ? "bg-blue-600" : "bg-gray-200"
+                  }`}
               >
                 <div
-                  className={`w-4 h-4 rounded-full bg-white shadow absolute top-1 transition-transform duration-200 ${
-                    value ? "translate-x-6" : "translate-x-1"
-                  }`}
+                  className={`w-4 h-4 rounded-full bg-white shadow absolute top-1 transition-transform duration-200 ${value ? "translate-x-6" : "translate-x-1"
+                    }`}
                 />
               </button>
             )}
@@ -227,7 +237,7 @@ export default memo(function AccountForm({ onSaveSuccess }: AccountFormProps) {
 
       {/* Right Column */}
       <div className="flex-1 space-y-5">
-          {/* Personal Info */}
+        {/* Personal Info */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h2 className="text-sm font-semibold text-gray-800 mb-5 pb-3 border-b border-gray-100">
             Thông tin cá nhân
@@ -252,11 +262,10 @@ export default memo(function AccountForm({ onSaveSuccess }: AccountFormProps) {
               </label>
               <input
                 {...register("fullName")}
-                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                  errors.fullName
+                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 ${errors.fullName
                     ? "border-red-300 bg-red-50"
                     : "border-gray-200"
-                }`}
+                  }`}
               />
               {errors.fullName && (
                 <p className="text-xs text-red-500">
@@ -270,11 +279,54 @@ export default memo(function AccountForm({ onSaveSuccess }: AccountFormProps) {
               <label className="text-xs text-gray-500 font-medium">
                 Ngày tháng năm sinh
               </label>
-              <input
-                type="date"
-                {...register("birthDate")}
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              <Controller
+                control={control}
+                name="birthDate"
+                render={({ field: { onChange, value } }) => (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="DD/MM/YYYY"
+                      value={value || ""}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/\D/g, "");
+                        if (val.length > 8) val = val.slice(0, 8);
+                        if (val.length > 4) {
+                          val = val.slice(0, 2) + "/" + val.slice(2, 4) + "/" + val.slice(4);
+                        } else if (val.length > 2) {
+                          val = val.slice(0, 2) + "/" + val.slice(2);
+                        }
+                        onChange(val);
+                      }}
+                      className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 pr-10 ${errors.birthDate ? "border-red-300 bg-red-50" : "border-gray-200"}`}
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      <Calendar className="w-4 h-4" />
+                      <input
+                        type="date"
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        value={(() => {
+                          if (!value) return "";
+                          const parts = value.split("/");
+                          if (parts.length === 3 && parts[2].length === 4) {
+                            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                          }
+                          return "";
+                        })()}
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            const [y, m, d] = e.target.value.split("-");
+                            onChange(`${d}/${m}/${y}`);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
               />
+              {errors.birthDate && (
+                <p className="text-xs text-red-500">{errors.birthDate.message}</p>
+              )}
             </div>
 
             {/* Gender */}

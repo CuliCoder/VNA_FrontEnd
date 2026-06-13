@@ -8,7 +8,8 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const accessToken = request.cookies.get("access_token")?.value;
-  const isAuthenticated = Boolean(accessToken);
+  const refreshToken = request.cookies.get("refresh_token")?.value;
+  const isAuthenticated = Boolean(accessToken) || Boolean(refreshToken);
 
   const isPublicOnly = PUBLIC_ONLY_ROUTES.some((r) => pathname.startsWith(r));
   const isPrivate = !isPublicOnly;

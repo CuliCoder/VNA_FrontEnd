@@ -8,7 +8,6 @@ export interface UpdateProfileRequest {
   wardId?: number;
   address?: string;
   avatarUrl?: string | null;
-  phone?: string | null;
 }
 export interface UpdateProfileResponse {
   message: string;

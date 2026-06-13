@@ -11,7 +11,7 @@ import {
   User as UserIcon,
   Menu,
 } from "lucide-react";
-import { SIDEBAR_MENUS, RoleCode } from "@/constants/menus";
+import { SIDEBAR_MENUS, RoleCode, MenuItem } from "@/constants/menus";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { changePasswordEvents } from "@/hooks/useModal";
@@ -20,12 +20,26 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const userRole = (user?.role?.code || "VIEWER") as RoleCode;
+  
+  // Extract permissions from user object
+  const userPermissions = user?.role?.permissions?.map((p: any) => p.code) || [];
+
+  const hasAccess = (menu: MenuItem) => {
+    if (menu.roles && menu.roles.length > 0) {
+      if (menu.roles.includes(userRole)) return true;
+    }
+    if (menu.permissions && menu.permissions.length > 0) {
+      if (menu.permissions.some((p) => userPermissions.includes(p))) return true;
+    }
+    return false;
+  };
+
   // Auto-open the group that contains the current path
   const getInitialOpen = () => {
     const open: Record<string, boolean> = {};
     SIDEBAR_MENUS.forEach((menu) => {
       if (menu.children?.some((c) => c.url && pathname.startsWith(c.url))) {
-        open[menu.title + menu.roles.join("")] = true;
+        open[menu.title + (menu.roles?.join("") || "") + (menu.permissions?.join("") || "")] = true;
       }
     });
     return open;
@@ -40,9 +54,7 @@ export default function Sidebar() {
     setOpenMenus((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const filteredMenus = SIDEBAR_MENUS.filter((menu) =>
-    menu.roles.includes(userRole),
-  );
+  const filteredMenus = SIDEBAR_MENUS.filter((menu) => hasAccess(menu));
 
   const avatarFallback = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" fill="%23ccc"/><circle cx="16" cy="12" r="5" fill="%23fff"/><path d="M7 26c0-5 4-9 9-9s9 4 9 9" fill="%23fff"/></svg>`;
   return (
@@ -80,7 +92,7 @@ export default function Sidebar() {
         <ul className="space-y-px">
           {filteredMenus.map((menu) => {
             // Unique key per menu (in case two menus share same title but different roles e.g. "Hệ thống")
-            const menuKey = menu.title + menu.roles.join("");
+            const menuKey = menu.title + (menu.roles?.join("") || "") + (menu.permissions?.join("") || "");
             const isOpen = openMenus[menuKey];
             const isGroupActive = menu.children?.some(
               (c) => c.url && pathname.startsWith(c.url),
@@ -119,7 +131,7 @@ export default function Sidebar() {
                     {(isOpen || isGroupActive) && !collapsed && (
                       <ul className="bg-[#182f77]">
                         {menu.children
-                          .filter((child) => child.roles.includes(userRole))
+                          .filter((child) => hasAccess(child))
                           .map((child) => {
                             const isActive = child.url
                               ? pathname === child.url ||
