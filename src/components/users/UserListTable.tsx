@@ -139,8 +139,8 @@ export default function UserListTable() {
         !user.isActive ? "Đã kích hoạt tài khoản" : "Đã vô hiệu hóa tài khoản",
       );
       fetchUsers();
-    } catch {
-      toast.error("Không thể thay đổi trạng thái");
+    } catch (ex: any) {
+      toast.error(ex.message || "Không thể thay đổi trạng thái");
     }
   };
   const handleInitPassword = async (userId: number, newPassword: string) => {
