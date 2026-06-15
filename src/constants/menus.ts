@@ -83,12 +83,12 @@ export const SIDEBAR_MENUS: MenuItem[] = [
       },
       {
         title: "Loại hình doanh nghiệp",
-        url: "/dashboard/business-types",
+        url: "/dashboard/business/business-types",
         roles: ["ADMIN"],
       },
       {
         title: "Ngành nghề kinh doanh",
-        url: "/dashboard/industries",
+        url: "/dashboard/business/business-fields",
         roles: ["ADMIN"],
       },
       {
