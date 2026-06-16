@@ -5,17 +5,16 @@ import { useRouter } from "next/navigation";
 import {
   Search,
   Plus,
-  Edit2,
+  Pencil,
   Eye,
   RefreshCw,
   Download,
   Upload,
   Filter,
   Trash2,
-  Key,
+  KeyRound,
 } from "lucide-react";
 import { adminUserService } from "@/services/adminUserService";
-import InitPasswordModal from "./InitPasswordModal";
 import type { User, Role } from "@/types/auth";
 import type { UserListParams } from "@/types/adminUser";
 import { toast } from "sonner";
@@ -28,7 +27,9 @@ import {
   TableCell,
   Button,
   Pagination,
-  FloatingSelectionBar 
+  FloatingSelectionBar,
+  DeleteConfirmModal,
+  InitPasswordModal
 } from "@/components/common";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { usePagination } from "@/hooks/usePagination";
@@ -60,6 +61,8 @@ export default function UserListTable() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [initPasswordUser, setInitPasswordUser] = useState<User | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Filters
   const [filterFullName, setFilterFullName] = useState("");
@@ -167,24 +170,24 @@ export default function UserListTable() {
 
   const handleInitPassword = async (userId: number, newPassword: string) => {
     try {
-      const res = await adminUserService.initPassword(userId, newPassword);
-      toast.success(res);
+      await adminUserService.initPassword(userId, newPassword);
     } catch (ex: any) {
-      toast.error(ex.message);
+      throw ex;
     }
   };
 
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.length} người dùng đã chọn?`)) {
-      return;
-    }
+    setIsDeleting(true);
     try {
       await adminUserService.bulkDeleteUsers(selectedIds as number[]);
       toast.success("Đã xóa các người dùng được chọn thành công");
       clearSelection();
+      setShowDeleteConfirm(false);
       fetchUsers();
     } catch (ex: any) {
       toast.error(ex.message || "Không thể xóa người dùng");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -397,29 +400,29 @@ export default function UserListTable() {
                   <TableCell>
                     <div className="flex items-center justify-center gap-1">
                       <button
-                        onClick={() => setInitPasswordUser(user)}
-                        className="p-1 rounded hover:bg-yellow-100 text-yellow-600 transition"
-                        title="Khởi tạo mật khẩu"
+                        onClick={() =>
+                          router.push(`/dashboard/users/${user.id}?view=true`)
+                        }
+                        className="p-1.5 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition"
+                        title="Xem chi tiết"
                       >
-                        <Key className="w-3.5 h-3.5" />
+                        <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() =>
                           router.push(`/dashboard/users/${user.id}`)
                         }
-                        className="p-1 rounded hover:bg-blue-100 text-blue-600 transition"
+                        className="p-1.5 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition"
                         title="Chỉnh sửa"
                       >
-                        <Edit2 className="w-3.5 h-3.5" />
+                        <Pencil className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() =>
-                          router.push(`/dashboard/users/${user.id}?view=true`)
-                        }
-                        className="p-1 rounded hover:bg-gray-100 text-gray-500 transition"
-                        title="Xem chi tiết"
+                        onClick={() => setInitPasswordUser(user)}
+                        className="p-1.5 rounded text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition"
+                        title="Khởi tạo mật khẩu"
                       >
-                        <Eye className="w-3.5 h-3.5" />
+                        <KeyRound className="w-4 h-4" />
                       </button>
                     </div>
                   </TableCell>
@@ -481,15 +484,23 @@ export default function UserListTable() {
         <FloatingSelectionBar
           selectedCount={selectedIds.length}
           onClearSelection={clearSelection}
-          onDelete={handleBulkDelete}
+          onDelete={() => setShowDeleteConfirm(true)}
         />
       </div>
 
       <InitPasswordModal
-        isOpen={!!initPasswordUser}
+        open={!!initPasswordUser}
+        username={initPasswordUser?.username || initPasswordUser?.email || ""}
         onClose={() => setInitPasswordUser(null)}
-        user={initPasswordUser}
-        onSubmit={handleInitPassword}
+        onSave={(newPassword) => handleInitPassword(initPasswordUser!.id, newPassword)}
+      />
+
+      <DeleteConfirmModal
+        open={showDeleteConfirm}
+        ids={selectedIds as number[]}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleBulkDelete}
+        isLoading={isDeleting}
       />
     </div>
   );

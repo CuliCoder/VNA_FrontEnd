@@ -6,16 +6,16 @@ import { toast } from "sonner";
 import Link from "next/link";
 import BusinessTable from "./BusinessTable";
 import EditBusinessModal from "./EditBusinessModal";
-import {
-  DeleteConfirmModal,
-  ViewDetailModal,
-  ChangePasswordModal,
-} from "./BusinessesModal";
+import { ViewDetailModal } from "./BusinessesModal";
 import {
   businessService,
   Enterprise,
 } from "@/services/businessService";
-import { Button } from "@/components/common";
+import { 
+  Button,
+  DeleteConfirmModal,
+  InitPasswordModal
+} from "@/components/common";
 
 export default function BusinessesView() {
   // ── Data state ─────────────────────────────────────────────────────────
@@ -200,11 +200,17 @@ export default function BusinessesView() {
       />
 
       {/* Đổi mật khẩu */}
-      <ChangePasswordModal
+      <InitPasswordModal
         open={pwdTarget !== null}
-        enterprise={pwdTarget}
+        username={pwdTarget?.user?.username || pwdTarget?.taxCode || ""}
         onClose={() => setPwdTarget(null)}
-        onSuccess={() => setPwdTarget(null)}
+        onSave={async (newPassword) => {
+          if (!pwdTarget) return;
+          await businessService.changePassword({
+            username: pwdTarget.user?.username || pwdTarget.taxCode,
+            newPassword: newPassword,
+          });
+        }}
       />
     </div>
   );

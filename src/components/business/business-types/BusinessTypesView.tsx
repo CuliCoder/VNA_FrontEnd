@@ -5,9 +5,8 @@ import { Plus, Download, Upload } from "lucide-react";
 import BusinessTypeTable from "./BusinessTypeTable";
 import AddBusinessTypeModal from "./AddBusinessTypeModal";
 import { businessTypeService, BusinessType } from "@/services/businessTypeService";
-import { DeleteConfirmModal } from "../businessses/BusinessesModal";
 import { toast } from "sonner";
-import { Button } from "@/components/common";
+import { Button, DeleteConfirmModal } from "@/components/common";
 
 export default function BusinessTypesView() {
   const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);

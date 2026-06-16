@@ -4,13 +4,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { Plus, Upload } from "lucide-react";
 import BusinessFieldTable from "./BusinessFieldTable";
 import BusinessFieldModal from "./BusinessFieldModal";
-import { DeleteConfirmModal } from "../businessses/BusinessesModal";
 import { toast } from "sonner";
 import {
   businessFieldService,
   BusinessField,
 } from "@/services/businessFieldService";
-import { Button } from "@/components/common";
+import { Button, DeleteConfirmModal } from "@/components/common";
 
 export default function BusinessFieldsView() {
   const [businessFields, setBusinessFields] = useState<BusinessField[]>([]);

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Edit3, ChevronDown } from "lucide-react";
+import { Pencil, ChevronDown } from "lucide-react";
 import { BusinessField } from "@/services/businessFieldService";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
 import {
@@ -207,8 +207,8 @@ export default function BusinessFieldTable({
                       />
                     </TableCell>
                     <TableCell className="text-center align-middle">
-                      <button className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded" onClick={() => onEdit(item)}>
-                        <Edit3 className="w-4 h-4" />
+                      <button className="p-1.5 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition" onClick={() => onEdit(item)}>
+                        <Pencil className="w-4 h-4" />
                       </button>
                     </TableCell>
                     <TableCell className="align-middle font-medium">{item.code}</TableCell>
