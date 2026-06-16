@@ -72,6 +72,7 @@ interface BusinessTableProps {
   onEdit: (item: Enterprise) => void;
   onChangePassword: (item: Enterprise) => void;
   onDeleteSelected: (ids: number[]) => void;
+  resetSelection?: number;
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -89,6 +90,7 @@ export default function BusinessTable({
   onEdit,
   onChangePassword,
   onDeleteSelected,
+  resetSelection,
 }: BusinessTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
@@ -154,6 +156,13 @@ export default function BusinessTable({
 
   const selectedCount = selectedIds.size;
 
+  // Clear selection when parent signals a reset (e.g., after deletion)
+  React.useEffect(() => {
+    if (typeof resetSelection === "number") {
+      setSelectedIds(new Set());
+    }
+  }, [resetSelection]);
+
   // ── Pagination ─────────────────────────────────────────────────────────
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
@@ -203,7 +212,7 @@ export default function BusinessTable({
               </th>
 
               {/* Loại hình kinh doanh */}
-              <th className="px-3 py-3 min-w-[160px]">
+              <th className="px-3 py-3 min-w-[180px]">
                 <div className="mb-1.5 font-semibold">Loại hình kinh doanh</div>
                 <div className="relative">
                   <select

@@ -32,6 +32,7 @@ export default function BusinessesView() {
   const [pwdTarget, setPwdTarget] = useState<Enterprise | null>(null);
   const [deleteIds, setDeleteIds] = useState<number[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [resetSelectionCounter, setResetSelectionCounter] = useState(0);
 
   // ── Fetch ──────────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
@@ -99,6 +100,8 @@ export default function BusinessesView() {
     try {
       await businessService.deleteEnterprises(deleteIds);
       setDeleteIds([]);
+      // signal table to clear its local selection state
+      setResetSelectionCounter((c) => c + 1);
       toast.success("Xóa thành công");
       await fetchData();
     } catch (err: any) {
@@ -160,6 +163,7 @@ export default function BusinessesView() {
           onEdit={(item) => setEditTarget(item)}
           onChangePassword={(item) => setPwdTarget(item)}
           onDeleteSelected={handleDeleteSelected}
+          resetSelection={resetSelectionCounter}
         />
       </div>
 

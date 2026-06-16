@@ -51,23 +51,23 @@ export interface ReviewData {
 // ─── Schema ─────────────────────────────────────────────
 
 const businessSchema = z.object({
-  name: z.string().min(1),
-  taxCode: z.string().regex(/^\d{10}$/),
+  name: z.string().nonempty("Tên doanh nghiệp là bắt buộc"),
+  taxCode: z.string().regex(/^\d{10}$/, "Mã số thuế phải có 10 chữ số"),
 
   licenseNumber: z.string().optional(),
   licenseDate: z.string().optional(),
 
-  businessType: z.string().min(1),
-  mainBusinessLine: z.string().min(1),
+  businessType: z.string().nonempty("Loại hình kinh doanh là bắt buộc"),
+  mainBusinessLine: z.string().nonempty("Ngành nghề kinh doanh chính là bắt buộc"),
 
-  provinceRegistration: z.string().min(1),
-  wardRegistration: z.string().min(1),
+  provinceRegistration: z.string().nonempty("Tỉnh/Thành phố ĐKKD là bắt buộc"),
+  wardRegistration: z.string().nonempty("Phường/Xã ĐKKD là bắt buộc"),
 
   addressRegistration: z.string().optional(),
 
   foreignName: z.string().optional(),
 
-  email: z.string().email(),
+  email: z.string().nonempty("Email là bắt buộc").email("Email không hợp lệ"),
   phone: z.string().optional(),
 
   provinceOperation: z.string().optional(),
@@ -475,7 +475,7 @@ export default function BusinessForm({
               <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10">Email <span className="text-red-500">*</span></div>
               <input {...register("email", {
                 required: "Email là bắt buộc",
-              })} placeholder="Email *" className={fc(!!errors.email) + " pt-3"} />
+              })} placeholder="Email" className={fc(!!errors.email) + " pt-3"} />
               {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
             </div>
             <div className="space-y-1.5">
