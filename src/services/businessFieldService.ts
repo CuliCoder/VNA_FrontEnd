@@ -29,7 +29,7 @@ export interface BusinessFieldUpdateRequest {
 export const businessFieldService = {
   getBusinessFields: async (params?: string): Promise<BusinessField[]> => {
     const res = await apiClient.get<BusinessField[]>(
-      API_ENDPOINTS.BUSINESS_FIELDS.ROOT + params
+      API_ENDPOINTS.BUSINESS_FIELDS.ROOT + (params || "")
     );
     return res.data;
   },
