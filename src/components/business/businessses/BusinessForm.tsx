@@ -45,6 +45,7 @@ export interface ReviewData {
   representativePhone?: string;
 
   documents?: any[];
+  files?: any[];
 }
 
 // ─── Schema ─────────────────────────────────────────────
@@ -106,6 +107,8 @@ interface FixedFileItem {
   documentType?: string;
   file?: File;
   url?: string;
+  mimeType?: string;
+  fileSize?: number;
 }
 
 // ─── Component ─────────────────────────────────────────
@@ -260,6 +263,8 @@ export default function BusinessForm({
             name: gpkd?.fileName || "",
             file: gpkd?.file,
             url: gpkd?.filePath || gpkd?.url,
+            mimeType: gpkd?.mimeType,
+            fileSize: gpkd?.fileSize,
           },
           {
             id: "other",
@@ -267,6 +272,8 @@ export default function BusinessForm({
             name: other?.fileName || "",
             file: other?.file,
             url: other?.filePath || other?.url,
+            mimeType: other?.mimeType,
+            fileSize: other?.fileSize,
           },
         ]);
       } catch (err) {
@@ -324,20 +331,30 @@ export default function BusinessForm({
       }
 
       // FILE UPLOAD
-      const filesToUpload = fixedFiles.filter((f) => f.file);
+      const documents: EnterpriseDocumentPayload[] = await Promise.all(
+        fixedFiles.map(async (f) => {
+          if (!f.file && !f.url) return null;
 
-      const uploaded = filesToUpload.length
-        ? await businessService.uploadFiles(filesToUpload.map((f) => f.file!), data.taxCode)
-        : [];
+          let docInfo: Partial<EnterpriseDocumentPayload> = {
+            documentName: f.type,
+            documentType: f.id === "gpkd" ? "BUSINESS_LICENSE" : "OTHER",
+          };
 
-      const documents: EnterpriseDocumentPayload[] = uploaded.map((doc, i) => ({
-        documentName: filesToUpload[i]?.type || doc.documentName,
-        documentType: doc.documentType,
-        fileName: doc.fileName,
-        filePath: doc.filePath,
-        mimeType: doc.mimeType,
-        fileSize: doc.fileSize,
-      }));
+          if (f.file) {
+            const uploadedDoc = await businessService.uploadFile(f.file, data.taxCode);
+            docInfo.fileName = uploadedDoc.fileName;
+            docInfo.filePath = uploadedDoc.url;
+            docInfo.mimeType = uploadedDoc.mimeType;
+            docInfo.fileSize = uploadedDoc.fileSize;
+          } else {
+            docInfo.fileName = f.name;
+            docInfo.filePath = f.url;
+            docInfo.mimeType = f.mimeType;
+            docInfo.fileSize = f.fileSize;
+          }
+          return docInfo as EnterpriseDocumentPayload;
+        })
+      ).then(docs => docs.filter(Boolean) as EnterpriseDocumentPayload[]);
 
       const payload = mapFormToBusinessRequest(data, documents);
 
@@ -388,7 +405,7 @@ export default function BusinessForm({
                 })}
                 placeholder="Mã số thuế"
                 disabled={mode === "edit"}
-                className={fc(!!errors.taxCode, mode === "edit" && "bg-gray-100 cursor-not-allowed")}
+                className={`${fc(!!errors.taxCode)} ${mode === "edit" ? "bg-gray-100 cursor-not-allowed" : ""}`}
               />
               {errors.taxCode && <p className="text-xs text-red-500">{errors.taxCode.message}</p>}
             </div>
@@ -396,7 +413,7 @@ export default function BusinessForm({
               <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10">Loại hình kinh doanh <span className="text-red-500">*</span></div>
               <select {...register("businessType", {
                 required: "Loại hình kinh doanh là bắt buộc",
-              })} className={fc(!!errors.businessType)}>
+              })} value={watch("businessType") || ""} className={fc(!!errors.businessType)}>
                 <option value="">Loại hình kinh doanh</option>
                 {businessTypes.map(t => <option key={t.id} value={String(t.id)}>
                   {t.name}
@@ -408,7 +425,7 @@ export default function BusinessForm({
               <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10">Ngành nghề kinh doanh chính <span className="text-red-500">*</span></div>
               <select {...register("mainBusinessLine", {
                 required: "Ngành nghề kinh doanh chính là bắt buộc",
-              })} className={fc(!!errors.mainBusinessLine)}>
+              })} value={watch("mainBusinessLine") || ""} className={fc(!!errors.mainBusinessLine)}>
                 <option value="">Ngành nghề kinh doanh chính</option>
                 {businessFields.map(l => <option key={l.id} value={String(l.id)}>
                   {l.code} - {l.name}
@@ -423,7 +440,7 @@ export default function BusinessForm({
             </div>
             <div className="space-y-1.5 relative">
               <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10">Tỉnh/Thành phố ĐKKD <span className="text-red-500">*</span></div>
-              <select {...register("provinceRegistration")} className={fc(!!errors.provinceRegistration)}>
+              <select {...register("provinceRegistration")} value={watch("provinceRegistration") || ""} className={fc(!!errors.provinceRegistration)}>
                 <option value="">Tỉnh/Thành phố ĐKKD</option>
                 {provinces.map(p => <option key={p.code} value={String(p.code)}>{p.name}</option>)}
               </select>
@@ -431,7 +448,7 @@ export default function BusinessForm({
             </div>
             <div className="space-y-1.5 relative">
               <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10">Phường/Xã ĐKKD <span className="text-red-500">*</span></div>
-              <select {...register("wardRegistration")} className={fc(!!errors.wardRegistration)} disabled={!selectedProvince}>
+              <select {...register("wardRegistration")} value={watch("wardRegistration") || ""} className={fc(!!errors.wardRegistration)} disabled={!selectedProvince}>
                 <option value="">Phường/Xã ĐKKD</option>
                 {wards.map(w => <option key={w.code} value={String(w.code)}>{w.name}</option>)}
               </select>
@@ -468,13 +485,13 @@ export default function BusinessForm({
               {errors.phone && <p className="text-xs text-red-500">{errors.phone.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <select {...register("provinceOperation")} className={sc}>
+              <select {...register("provinceOperation")} value={watch("provinceOperation") || ""} className={sc}>
                 <option value="">Tỉnh/TP hoạt động KD</option>
                 {provinces.map(p => <option key={p.code} value={String(p.code)}>{p.name}</option>)}
               </select>
             </div>
             <div className="space-y-1.5">
-              <select {...register("wardOperation")} className={sc} disabled={!selectedOpProvince}>
+              <select {...register("wardOperation")} value={watch("wardOperation") || ""} className={sc} disabled={!selectedOpProvince}>
                 <option value="">Phường/xã hoạt động KD</option>
                 {opWards.map(w => <option key={w.code} value={String(w.code)}>{w.name}</option>)}
               </select>

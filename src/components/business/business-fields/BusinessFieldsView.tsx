@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Plus, Upload } from "lucide-react";
 import BusinessFieldTable from "./BusinessFieldTable";
 import BusinessFieldModal from "./BusinessFieldModal";
 import { DeleteConfirmModal } from "../businessses/BusinessesModal";
+import { toast } from "sonner";
 import {
   businessFieldService,
   BusinessField,
@@ -15,6 +16,8 @@ export default function BusinessFieldsView() {
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BusinessField | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Pagination & Filter States
   const [page, setPage] = useState(1);
@@ -31,7 +34,9 @@ export default function BusinessFieldsView() {
       await businessFieldService.deleteBusinessFields(deleteIds);
       setDeleteIds([]);
       fetchBusinessFields();
-    } catch (err) {
+      toast.success("Xóa thành công");
+    } catch (err: any) {
+      toast.error(err.message || "Xóa thất bại");
       console.error("Xóa thất bại:", err);
     } finally {
       setIsDeleting(false);
@@ -62,10 +67,34 @@ export default function BusinessFieldsView() {
       setBusinessFields((prev) =>
         prev.map((item) => (item.id === id ? { ...item, status } : item))
       );
-    } catch (error) {
+      toast.success("Cập nhật trạng thái thành công");
+    } catch (error: any) {
+      toast.error(error.message || "Cập nhật trạng thái thất bại");
       console.error("Failed to update status", error);
       // Revert if API fails
       fetchBusinessFields();
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+    try {
+      const res = await businessFieldService.importBusinessFields(file);
+      fetchBusinessFields();
+      toast.success(res.data?.message || "Nhập file thành công");
+    } catch (error: any) {
+      toast.error(error.message || "Nhập file thất bại");
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -99,9 +128,20 @@ export default function BusinessFieldsView() {
         </h1>
 
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+            className="hidden"
+          />
+          <button 
+            onClick={handleImportClick}
+            disabled={isImporting}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors disabled:opacity-50"
+          >
             <Upload className="w-4 h-4" />
-            Thêm từ file
+            {isImporting ? "Đang xử lý..." : "Thêm từ file"}
           </button>
 
           <button

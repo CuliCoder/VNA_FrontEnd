@@ -77,7 +77,7 @@ export function mapFormToReviewData(
     representativePhone: data.representativePhone || "",
     documents: documents as any[] | undefined,
     // For the review component we also expose `files` for compatibility with BusinessReview
-    documents: documents as any[] | undefined,
+    files: documents as any[] | undefined,
   };
 }
 

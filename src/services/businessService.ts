@@ -23,8 +23,8 @@ export interface BusinessProfileRequest {
   businessTypeId: number;
   businessFieldId: number;
 
-  provinceId: number;
-  wardId: number;
+  provinceId?: number;
+  wardId?: number;
   registeredAddress?: string;
 
   provinceIdActivity?: number;
@@ -159,12 +159,12 @@ export const businessService = {
   createBusiness: async (
     payload: BusinessProfileRequest
   ): Promise<CreateEnterpriseResponse> => {
-    const res = await apiClient.post<ApiResponse<CreateEnterpriseResponse>>(
+    const res = await apiClient.post<CreateEnterpriseResponse>(
       API_ENDPOINTS.ENTERPRISES.CREATE,
       payload
     );
 
-    return res.data.data as CreateEnterpriseResponse;
+    return res.data;
   },
 
   /** Danh sách doanh nghiệp */
@@ -198,7 +198,7 @@ export const businessService = {
       API_ENDPOINTS.ENTERPRISES.DETAIL(id)
     );
 
-    return res.data.data as Enterprise;
+    return (res.data.data ?? res.data) as Enterprise;
   },
 
   /** Cập nhật thông tin doanh nghiệp */
@@ -206,12 +206,12 @@ export const businessService = {
     id: number,
     payload: Partial<BusinessProfileRequest>
   ): Promise<Enterprise> => {
-    const res = await apiClient.patch<ApiResponse<Enterprise>>(
+    const res = await apiClient.patch<Enterprise>(
       API_ENDPOINTS.ENTERPRISES.DETAIL(id),
       payload
     );
 
-    return res.data.data as Enterprise;
+    return res.data;
   },
 
   /** Xóa 1 doanh nghiệp */
@@ -235,11 +235,13 @@ export const businessService = {
   /** Đổi mật khẩu */
   changePassword: async (
     payload: ChangePasswordRequest
-  ): Promise<void> => {
-    await apiClient.post<ApiResponse<void>>(
+  ): Promise<{message: string}> => {
+    const res = await apiClient.post<{message: string}>(
       API_ENDPOINTS.ENTERPRISES.CHANGE_PASSWORD,
       payload
     );
+
+    return res.data;
   },
 
   /** Duyệt / từ chối / chờ duyệt */
@@ -253,32 +255,59 @@ export const businessService = {
     );
   },
 
-  /** Upload tài liệu
-   *  Sends files as multipart field `file` (multiple parts allowed)
-   *  Optionally accepts `taxCode` as query param so backend can store in specific folder
-   */
-  uploadFiles: async (
-    files: File[],
+  uploadFile: async (
+    file: File,
     taxCode?: string
-  ): Promise<EnterpriseDocument[]> => {
+  ): Promise<{ url: string; fileName: string; mimeType: string; fileSize: number; documentName?: string; documentType?: string; filePath?: string }> => {
     const formData = new FormData();
+    formData.append("file", file);
 
-    // Some backends expect an array field like `files` for multiple uploads.
-    // Send each file under `files` so server-side handlers (e.g. upload.array('files')) accept them.
-    files.forEach((file) => {
-      formData.append("files", file);
-    });
-
-    const res = await apiClient.post<ApiResponse<EnterpriseDocument[]>>(
+    const res = await apiClient.post<ApiResponse<{ url: string; fileName: string; mimeType: string; fileSize: number }>>(
       API_ENDPOINTS.ENTERPRISES.UPLOAD,
       formData,
       {
-        // Do not set Content-Type manually for FormData —
-        // the browser will add the correct multipart boundary.
         params: taxCode ? { taxCode } : undefined,
       }
     );
 
-    return res.data.data as EnterpriseDocument[];
+    // Some components expect `filePath` mapping
+    const data = res.data.data ?? res.data;
+    return {
+      ...data,
+      filePath: data.url,
+    };
+  },
+
+  /** Upload nhiều tài liệu (gọi lần lượt uploadFile) */
+  uploadFiles: async (
+    files: File[],
+    taxCode?: string
+  ): Promise<any[]> => {
+    return await Promise.all(
+      files.map((file) => businessService.uploadFile(file, taxCode))
+    );
+  },
+
+  /** Xóa file tài liệu */
+  deleteFile: async (filePath: string): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>(
+      API_ENDPOINTS.ENTERPRISES.UPLOAD,
+      { params: { filePath } }
+    );
+  },
+
+  /** Nhập doanh nghiệp từ file */
+  importEnterprises: async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return await apiClient.post<ApiResponse<any>>(
+      API_ENDPOINTS.ENTERPRISES.IMPORT,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
   },
 };

@@ -135,7 +135,7 @@ export const SIDEBAR_MENUS: MenuItem[] = [
       {
         title: "Thông tin doanh nghiệp",
         url: "/dashboard/business/create",
-        roles: ["ENTERPRISE"],
+        permissions: ["ENTERPRISE_VIEW", "ENTERPRISE_APPROVE"],
       },
     ],
   },

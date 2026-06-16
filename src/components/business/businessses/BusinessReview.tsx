@@ -29,17 +29,22 @@ export interface ReviewData {
   addressRegistration?: string;
 
   provinceOperation?: number;
+  provinceIdActivity?: number;
   provinceOperationName?: string;
 
   wardId?: number;
+  wardOperation?: number;
+  wardIdActivity?: number;
   wardOperationName?: string;
 
   addressOperation?: string;
+  operatingAddress?: string;
 
   foreignName?: string;
 
   email: string;
   phone?: string;
+  officePhone?: string;
 
   representativeName?: string;
   representativePhone?: string;
@@ -117,13 +122,13 @@ export default function BusinessReview({
           if (p) {
             setProvinceName(p.name);
             const wards = await locationService.getWardsByProvince(Number(p.code));
-            const w = wards.find((x) => Number(x.code) === Number(data.wardId || data.wardRegistration || data.wardIdActivity || data.wardIdActivity));
+            const w = wards.find((x) => Number(x.code) === Number(data.wardRegistration || data.wardId));
             if (w) setWardName(w.name);
           }
         }
         // operation / activity province/ward may be named differently in different data shapes
-        const opProvinceId = data.provinceIdActivity ?? data.provinceOperation ?? data.provinceIdActivity;
-        const opWardId = data.wardIdActivity ?? data.wardOperation ?? data.wardIdActivity;
+        const opProvinceId = data.provinceIdActivity ?? data.provinceOperation;
+        const opWardId = data.wardIdActivity ?? data.wardOperation;
         if (opProvinceId) {
           const provinces = await locationService.getProvinces();
           const p = provinces.find((x) => Number(x.code) === Number(opProvinceId));
@@ -169,9 +174,9 @@ export default function BusinessReview({
   const opAddress = [
     data.operatingAddress || data.addressOperation,
     opWardName || (data.wardOperationName
-      ? `${data.wardOperationName} ${data.wardId ? `(${data.wardId})` : ""}`
-      : data.wardId
-      ? String(data.wardId)
+      ? `${data.wardOperationName} ${data.wardIdActivity ?? data.wardOperation ? `(${data.wardIdActivity ?? data.wardOperation})` : ""}`
+      : (data.wardIdActivity ?? data.wardOperation)
+      ? String(data.wardIdActivity ?? data.wardOperation)
       : undefined),
     opProvinceName || (data.provinceOperationName
       ? `${data.provinceOperationName} ${data.provinceOperation ? `(${data.provinceOperation})` : ""}`
@@ -222,7 +227,7 @@ export default function BusinessReview({
 
         <InfoRow
           label="Số điện thoại cơ quan"
-          value={data.phone}
+          value={data.phone || data.officePhone}
         />
 
         <InfoRow
