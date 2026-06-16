@@ -286,7 +286,7 @@ export default function BusinessForm({
   useEffect(() => {
     locationService.getProvinces().then(setProvinces);
     businessTypeService.getBusinessTypes().then(setBusinessTypes);
-    businessFieldService.getBusinessFields().then(setBusinessFields);
+    businessFieldService.getBusinessFields("/?level=4").then(setBusinessFields);
   }, []);
 
   useEffect(() => {

@@ -30,7 +30,7 @@ export interface ProvinceWithDistricts extends Province {
 }
 
 const api = axios.create({
-  baseURL: "https://provinces.open-api.vn/api",
+  baseURL: "https://provinces.open-api.vn/api/v2",
   timeout: 10000,
 });
 
@@ -41,20 +41,7 @@ export const locationService = {
   },
 
   getWardsByProvince: async (provinceCode: number): Promise<Ward[]> => {
-    // Fetch province with depth 3 to get districts and their wards
-    const res = await api.get<ProvinceWithDistricts>(`/p/${provinceCode}?depth=3`);
-    const province = res.data;
-    
-    // Flatten all wards from all districts
-    const wards: Ward[] = [];
-    if (province.districts) {
-      for (const district of province.districts) {
-        if (district.wards) {
-          wards.push(...district.wards);
-        }
-      }
-    }
-    
-    return wards;
+    const res = await api.get<Ward[]>(`/w/?province=${provinceCode}`);
+    return res.data;
   },
 };
