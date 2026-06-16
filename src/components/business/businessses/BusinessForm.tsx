@@ -16,6 +16,7 @@ import {
 } from "@/services/businessService";
 
 import { mapFormToBusinessRequest, mapFormToReviewData } from "./mapper";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 // ─── Types ─────────────────────────────────────────────
 
 export interface ReviewData {
@@ -181,6 +182,7 @@ export default function BusinessForm({
     handleSubmit,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<BusinessFormValues>({
     resolver: zodResolver(businessSchema),
@@ -411,26 +413,26 @@ export default function BusinessForm({
             </div>
             <div className="space-y-1.5 relative">
               <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10">Loại hình kinh doanh <span className="text-red-500">*</span></div>
-              <select {...register("businessType", {
-                required: "Loại hình kinh doanh là bắt buộc",
-              })} value={watch("businessType") || ""} className={fc(!!errors.businessType)}>
-                <option value="">Loại hình kinh doanh</option>
-                {businessTypes.map(t => <option key={t.id} value={String(t.id)}>
-                  {t.name}
-                </option>)}
-              </select>
+              <div className={!!errors.businessType ? "ring-1 ring-red-300 rounded-md" : ""}>
+                <SearchableSelect
+                  value={watch("businessType") || ""}
+                  placeholder="Loại hình kinh doanh"
+                  options={businessTypes.map(t => ({ value: String(t.id), label: t.name }))}
+                  onChange={(val) => setValue("businessType", String(val), { shouldValidate: true })}
+                />
+              </div>
               {errors.businessType && <p className="text-xs text-red-500">{errors.businessType.message}</p>}
             </div>
             <div className="space-y-1.5 relative">
               <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10">Ngành nghề kinh doanh chính <span className="text-red-500">*</span></div>
-              <select {...register("mainBusinessLine", {
-                required: "Ngành nghề kinh doanh chính là bắt buộc",
-              })} value={watch("mainBusinessLine") || ""} className={fc(!!errors.mainBusinessLine)}>
-                <option value="">Ngành nghề kinh doanh chính</option>
-                {businessFields.map(l => <option key={l.id} value={String(l.id)}>
-                  {l.code} - {l.name}
-                </option>)}
-              </select>
+              <div className={!!errors.mainBusinessLine ? "ring-1 ring-red-300 rounded-md" : ""}>
+                <SearchableSelect
+                  value={watch("mainBusinessLine") || ""}
+                  placeholder="Ngành nghề kinh doanh chính"
+                  options={businessFields.map(l => ({ value: String(l.id), label: `${l.code} - ${l.name}` }))}
+                  onChange={(val) => setValue("mainBusinessLine", String(val), { shouldValidate: true })}
+                />
+              </div>
               {errors.mainBusinessLine && <p className="text-xs text-red-500">{errors.mainBusinessLine.message}</p>}
             </div>
             <div className="space-y-1.5 relative">
@@ -440,23 +442,35 @@ export default function BusinessForm({
             </div>
             <div className="space-y-1.5 relative">
               <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10">Tỉnh/Thành phố ĐKKD <span className="text-red-500">*</span></div>
-              <select {...register("provinceRegistration")} value={watch("provinceRegistration") || ""} className={fc(!!errors.provinceRegistration)}>
-                <option value="">Tỉnh/Thành phố ĐKKD</option>
-                {provinces.map(p => <option key={p.code} value={String(p.code)}>{p.name}</option>)}
-              </select>
+              <div className={!!errors.provinceRegistration ? "ring-1 ring-red-300 rounded-md" : ""}>
+                <SearchableSelect
+                  value={watch("provinceRegistration") || ""}
+                  placeholder="Tỉnh/Thành phố ĐKKD"
+                  options={provinces.map(p => ({ value: String(p.code), label: p.name }))}
+                  onChange={(val) => {
+                    setValue("provinceRegistration", String(val), { shouldValidate: true });
+                    setValue("wardRegistration", "", { shouldValidate: true });
+                  }}
+                />
+              </div>
               {errors.provinceRegistration && <p className="text-xs text-red-500">{errors.provinceRegistration.message}</p>}
             </div>
             <div className="space-y-1.5 relative">
               <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10">Phường/Xã ĐKKD <span className="text-red-500">*</span></div>
-              <select {...register("wardRegistration")} value={watch("wardRegistration") || ""} className={fc(!!errors.wardRegistration)} disabled={!selectedProvince}>
-                <option value="">Phường/Xã ĐKKD</option>
-                {wards.map(w => <option key={w.code} value={String(w.code)}>{w.name}</option>)}
-              </select>
+              <div className={!!errors.wardRegistration ? "ring-1 ring-red-300 rounded-md" : ""}>
+                <SearchableSelect
+                  value={watch("wardRegistration") || ""}
+                  placeholder="Phường/Xã ĐKKD"
+                  options={wards.map(w => ({ value: String(w.code), label: w.name }))}
+                  onChange={(val) => setValue("wardRegistration", String(val), { shouldValidate: true })}
+                  disabled={!selectedProvince}
+                />
+              </div>
               {errors.wardRegistration && <p className="text-xs text-red-500">{errors.wardRegistration.message}</p>}
             </div>
             <div className="space-y-1.5 relative">
               <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10">Địa chỉ</div>
-              <input {...register("addressRegistration")} placeholder="Địa chỉ đăng ký ĐKKD" className={fc(!!errors.addressRegistration)} />
+              <input autoComplete="street-address" {...register("addressRegistration")} placeholder="Địa chỉ đăng ký ĐKKD" className={fc(!!errors.addressRegistration)} />
               {errors.addressRegistration && <p className="text-xs text-red-500">{errors.addressRegistration.message}</p>}
             </div>
           </div>
@@ -485,20 +499,30 @@ export default function BusinessForm({
               {errors.phone && <p className="text-xs text-red-500">{errors.phone.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <select {...register("provinceOperation")} value={watch("provinceOperation") || ""} className={sc}>
-                <option value="">Tỉnh/TP hoạt động KD</option>
-                {provinces.map(p => <option key={p.code} value={String(p.code)}>{p.name}</option>)}
-              </select>
+              <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10 hidden">Tỉnh/TP hoạt động KD</div>
+              <SearchableSelect
+                value={watch("provinceOperation") || ""}
+                placeholder="Tỉnh/TP hoạt động KD"
+                options={provinces.map(p => ({ value: String(p.code), label: p.name }))}
+                onChange={(val) => {
+                  setValue("provinceOperation", String(val), { shouldValidate: true });
+                  setValue("wardOperation", "", { shouldValidate: true });
+                }}
+              />
             </div>
             <div className="space-y-1.5">
-              <select {...register("wardOperation")} value={watch("wardOperation") || ""} className={sc} disabled={!selectedOpProvince}>
-                <option value="">Phường/xã hoạt động KD</option>
-                {opWards.map(w => <option key={w.code} value={String(w.code)}>{w.name}</option>)}
-              </select>
+              <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10 hidden">Phường/xã hoạt động KD</div>
+              <SearchableSelect
+                value={watch("wardOperation") || ""}
+                placeholder="Phường/xã hoạt động KD"
+                options={opWards.map(w => ({ value: String(w.code), label: w.name }))}
+                onChange={(val) => setValue("wardOperation", String(val), { shouldValidate: true })}
+                disabled={!selectedOpProvince}
+              />
             </div>
             <div className="space-y-1.5"></div> {/* Empty space to match layout if needed, actually layout puts Address next to Ward */}
             <div className="space-y-1.5">
-              <input {...register("addressOperation", {
+              <input autoComplete="street-address" {...register("addressOperation", {
                 required: "Địa điểm kinh doanh là bắt buộc",
               })} placeholder="Địa điểm kinh doanh" className={fc(!!errors.addressOperation)} />
             </div>
