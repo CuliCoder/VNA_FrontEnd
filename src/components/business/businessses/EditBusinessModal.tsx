@@ -20,7 +20,9 @@ export default function EditBusinessModal({
   const handleSubmit = async (payload: any) => {
     if (!enterprise?.id) return;
 
-    await businessService.updateEnterprise(enterprise.id, payload);
+    // taxCode is immutable/identifier — do not send it in update payload
+    const { taxCode, ...updatePayload } = payload;
+    await businessService.updateEnterprise(enterprise.id, updatePayload);
 
     onClose();
     onSuccess();
