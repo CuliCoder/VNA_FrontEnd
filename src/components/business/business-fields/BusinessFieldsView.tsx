@@ -158,7 +158,7 @@ export default function BusinessFieldsView() {
       </div>
 
       {/* Table Card */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col flex-1 overflow-hidden relative p-4">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col flex-1 overflow-hidden relative">
         <BusinessFieldTable
           data={businessFields}
           isLoading={isLoading}

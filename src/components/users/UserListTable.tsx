@@ -84,6 +84,7 @@ export default function UserListTable() {
   // Debounce search
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isFirstMount = useRef(true);
   const [debouncedFilters, setDebouncedFilters] = useState({
     fullName: "",
     username: "",
@@ -92,6 +93,10 @@ export default function UserListTable() {
   });
 
   useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
     searchTimeout.current = setTimeout(() => {
       setDebouncedFilters({
@@ -149,13 +154,14 @@ export default function UserListTable() {
 
   const handleToggleStatus = async (user: User) => {
     try {
+      setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, isActive: !user.isActive } : u));
       await adminUserService.toggleStatus(user.id, !user.isActive);
       toast.success(
         !user.isActive ? "Đã kích hoạt tài khoản" : "Đã vô hiệu hóa tài khoản",
       );
-      fetchUsers();
     } catch (ex: any) {
       toast.error(ex.message || "Không thể thay đổi trạng thái");
+      fetchUsers();
     }
   };
 

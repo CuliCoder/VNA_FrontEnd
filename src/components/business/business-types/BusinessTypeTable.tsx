@@ -79,8 +79,8 @@ export default function BusinessTypeTable({
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
-    <div className="flex flex-col h-full flex-1 relative">
-      <div className="overflow-auto border border-gray-200 rounded-md flex-1">
+    <>
+      <div className="overflow-auto flex-1">
         <Table>
           <TableHeader>
             <TableRow>
@@ -195,15 +195,18 @@ export default function BusinessTypeTable({
         } : undefined}
       />
 
-      <Pagination
-        page={page}
-        limit={limit}
-        total={total}
-        totalPages={totalPages}
-        onPageChange={onPageChange}
-        onLimitChange={onLimitChange}
-        className="border-none mt-2 px-0 py-2 bg-transparent"
-      />
-    </div>
+      {/* 🟢 Footer / Pagination 🟢 */}
+      <div className="flex items-center justify-end border-t border-gray-100 bg-gray-50/30 shrink-0 pr-4">
+        <Pagination
+          page={page}
+          limit={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          className="border-none bg-transparent py-2.5 px-0"
+        />
+      </div>
+    </>
   );
 }

@@ -133,7 +133,7 @@ export default function BusinessTypesView() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col flex-1 overflow-hidden relative p-4">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col flex-1 overflow-hidden relative">
         <BusinessTypeTable
           data={businessTypes}
           isLoading={isLoading}

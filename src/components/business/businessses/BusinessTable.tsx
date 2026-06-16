@@ -134,9 +134,9 @@ export default function BusinessTable({
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
-    <div className="flex flex-col flex-1 h-full relative">
+    <>
       {/* Table */}
-      <div className="flex-1 overflow-auto border border-gray-200 rounded-md">
+      <div className="flex-1 overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -339,15 +339,18 @@ export default function BusinessTable({
         onDelete={() => onDeleteSelected(selectedIds as number[])}
       />
 
-      <Pagination
-        page={page}
-        limit={limit}
-        total={total}
-        totalPages={totalPages}
-        onPageChange={onPageChange}
-        onLimitChange={onLimitChange}
-        className="border-none mt-2 px-0 py-2 bg-transparent"
-      />
-    </div>
+      {/* 🟢 Footer / Pagination 🟢 */}
+      <div className="flex items-center justify-end border-t border-gray-100 bg-gray-50/30 shrink-0 pr-4">
+        <Pagination
+          page={page}
+          limit={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          className="border-none bg-transparent py-2.5 px-0"
+        />
+      </div>
+    </>
   );
 }

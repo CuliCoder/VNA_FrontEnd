@@ -61,9 +61,9 @@ export default function BusinessesView() {
     status: "APPROVED" | "PENDING" | "REJECTED"
   ) => {
     try {
+      setData((prev) => prev.map((item) => item.id === id ? { ...item, status } : item));
       await businessService.updateStatus(id, status);
       toast.success("Cập nhật trạng thái thành công");
-      fetchData();
     } catch (err: any) {
       toast.error(err.message || "Cập nhật trạng thái thất bại");
       fetchData();
@@ -152,7 +152,7 @@ export default function BusinessesView() {
       </div>
 
       {/* 🟢 Table Card 🟢 */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col flex-1 overflow-hidden relative p-4">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col flex-1 overflow-hidden relative">
         <BusinessTable
           data={data}
           isLoading={isLoading}
