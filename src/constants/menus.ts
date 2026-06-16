@@ -93,7 +93,7 @@ export const SIDEBAR_MENUS: MenuItem[] = [
       },
       {
         title: "Quản lý doanh nghiệp",
-        url: "/dashboard/businesses",
+        url: "/dashboard/business/businesses",
         roles: ["ADMIN"],
       },
       {
