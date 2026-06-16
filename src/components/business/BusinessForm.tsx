@@ -8,6 +8,7 @@ import { Eye, Upload, Trash2 } from "lucide-react";
 import { businessService, BusinessProfileRequest } from "@/services/businessService";
 import { toast } from "sonner";
 import { useAddress } from "@/hooks/useAddress";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 
 const businessSchema = z.object({
   name: z.string().min(1, "Tên doanh nghiệp là bắt buộc"),
@@ -95,6 +96,7 @@ export default function BusinessForm() {
     handleSubmit,
     setValue,
     getValues,
+    watch,
     formState: { errors },
   } = useForm<BusinessFormValues>({
     resolver: zodResolver(businessSchema),
@@ -237,23 +239,27 @@ export default function BusinessForm() {
 
             <div className="space-y-1.5">
               <label className="text-xs text-gray-500 font-medium">Loại hình kinh doanh <span className="text-red-500">*</span></label>
-              <select {...register("businessTypeId", { valueAsNumber: true })} className={fieldClass(!!errors.businessTypeId)}>
-                <option value="">-- Chọn loại hình --</option>
-                {BUSINESS_TYPES.map((t) => (
-                  <option key={t.id} value={t.id}>{t.label}</option>
-                ))}
-              </select>
+              <div className={!!errors.businessTypeId ? "ring-1 ring-red-300 rounded-md" : ""}>
+                <SearchableSelect
+                  value={watch("businessTypeId") || ""}
+                  placeholder="-- Chọn loại hình --"
+                  options={BUSINESS_TYPES.map((t) => ({ value: t.id, label: t.label }))}
+                  onChange={(val) => setValue("businessTypeId", Number(val) || 0, { shouldValidate: true })}
+                />
+              </div>
               {errors.businessTypeId && <p className="text-xs text-red-500">{errors.businessTypeId.message}</p>}
             </div>
 
             <div className="space-y-1.5 col-span-2">
               <label className="text-xs text-gray-500 font-medium">Ngành nghề kinh doanh chính <span className="text-red-500">*</span></label>
-              <select {...register("businessFieldId", { valueAsNumber: true })} className={fieldClass(!!errors.businessFieldId)}>
-                <option value="">-- Chọn ngành nghề --</option>
-                {BUSINESS_LINES.map((l) => (
-                  <option key={l.id} value={l.id}>{l.code} - {l.label}</option>
-                ))}
-              </select>
+              <div className={!!errors.businessFieldId ? "ring-1 ring-red-300 rounded-md" : ""}>
+                <SearchableSelect
+                  value={watch("businessFieldId") || ""}
+                  placeholder="-- Chọn ngành nghề --"
+                  options={BUSINESS_LINES.map((l) => ({ value: l.id, label: `${l.code} - ${l.label}` }))}
+                  onChange={(val) => setValue("businessFieldId", Number(val) || 0, { shouldValidate: true })}
+                />
+              </div>
               {errors.businessFieldId && <p className="text-xs text-red-500">{errors.businessFieldId.message}</p>}
             </div>
 
@@ -268,43 +274,34 @@ export default function BusinessForm() {
 
             <div className="space-y-1.5">
               <label className="text-xs text-gray-500 font-medium">Tỉnh/Thành phố ĐKKD <span className="text-red-500">*</span></label>
-              <select
-                className={selectClass}
-                value={selectedProvinceReg}
-                onChange={(e) => {
-                  const code = Number(e.target.value) || undefined;
+              <SearchableSelect
+                loading={loadingProvincesReg}
+                value={selectedProvinceReg || ""}
+                placeholder="-- Chọn tỉnh/thành phố --"
+                options={provincesReg.map((p) => ({ value: p.code, label: p.name }))}
+                onChange={(val) => {
+                  const code = Number(val) || undefined;
                   handleProvinceRegChange(code ?? "");
                   setValue("provinceId", code);
                   setValue("wardId", undefined);
                 }}
-              >
-                <option value="">
-                  {loadingProvincesReg ? "Đang tải..." : "-- Chọn tỉnh/thành phố --"}
-                </option>
-                {provincesReg.map((p) => (
-                  <option key={p.code} value={p.code}>{p.name}</option>
-                ))}
-              </select>
+              />
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs text-gray-500 font-medium">Phường/Xã ĐKKD <span className="text-red-500">*</span></label>
-              <select
-                className={selectClass}
-                value={selectedWardReg}
-                onChange={(e) => {
-                  const code = Number(e.target.value) || undefined;
+              <SearchableSelect
+                loading={loadingWardsReg}
+                value={selectedWardReg || ""}
+                placeholder="-- Chọn phường/xã --"
+                disabled={!selectedProvinceReg}
+                options={wardsReg.map((w) => ({ value: w.code, label: w.name }))}
+                onChange={(val) => {
+                  const code = Number(val) || undefined;
                   setSelectedWardReg(code ?? "");
                   setValue("wardId", code);
                 }}
-              >
-                <option value="">
-                  {loadingWardsReg ? "Đang tải..." : "-- Chọn phường/xã --"}
-                </option>
-                {wardsReg.map((w) => (
-                  <option key={w.code} value={w.code}>{w.name}</option>
-                ))}
-              </select>
+              />
             </div>
 
             <div className="space-y-1.5 col-span-2">
@@ -352,42 +349,33 @@ export default function BusinessForm() {
             </div>
 
             <div className="space-y-1.5">
-              <select
-                className={selectClass}
-                value={selectedProvinceAct}
-                onChange={(e) => {
-                  const code = Number(e.target.value) || undefined;
+              <SearchableSelect
+                loading={loadingProvincesAct}
+                value={selectedProvinceAct || ""}
+                placeholder="Tỉnh/TP hoạt động KD"
+                options={provincesAct.map((p) => ({ value: p.code, label: p.name }))}
+                onChange={(val) => {
+                  const code = Number(val) || undefined;
                   handleProvinceActChange(code ?? "");
                   setValue("provinceIdActivity", code);
                   setValue("wardIdActivity", undefined);
                 }}
-              >
-                <option value="">
-                  {loadingProvincesAct ? "Đang tải..." : "Tỉnh/TP hoạt động KD"}
-                </option>
-                {provincesAct.map((p) => (
-                  <option key={p.code} value={p.code}>{p.name}</option>
-                ))}
-              </select>
+              />
             </div>
 
             <div className="space-y-1.5">
-              <select
-                className={selectClass}
-                value={selectedWardAct}
-                onChange={(e) => {
-                  const code = Number(e.target.value) || undefined;
+              <SearchableSelect
+                loading={loadingWardsAct}
+                value={selectedWardAct || ""}
+                placeholder="Phường/xã hoạt động KD"
+                disabled={!selectedProvinceAct}
+                options={wardsAct.map((w) => ({ value: w.code, label: w.name }))}
+                onChange={(val) => {
+                  const code = Number(val) || undefined;
                   setSelectedWardAct(code ?? "");
                   setValue("wardIdActivity", code);
                 }}
-              >
-                <option value="">
-                  {loadingWardsAct ? "Đang tải..." : "Phường/xã hoạt động KD"}
-                </option>
-                {wardsAct.map((w) => (
-                  <option key={w.code} value={w.code}>{w.name}</option>
-                ))}
-              </select>
+              />
             </div>
 
             <div className="space-y-1.5">

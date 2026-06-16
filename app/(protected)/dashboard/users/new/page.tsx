@@ -8,8 +8,7 @@ export default function NewUserPage() {
   const router = useRouter();
 
   const handleSaveSuccess = (user: User) => {
-    // Sau khi tạo thành công, chuyển sang trang edit
-    router.push(`/dashboard/users/${user.id}`);
+    router.push(`/dashboard/users`);
   };
 
   return (

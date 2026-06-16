@@ -5,8 +5,8 @@ import { Plus, Download, Upload } from "lucide-react";
 import BusinessTypeTable from "./BusinessTypeTable";
 import AddBusinessTypeModal from "./AddBusinessTypeModal";
 import { businessTypeService, BusinessType } from "@/services/businessTypeService";
-import { DeleteConfirmModal } from "../businessses/BusinessesModal";
 import { toast } from "sonner";
+import { Button, DeleteConfirmModal } from "@/components/common";
 
 export default function BusinessTypesView() {
   const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
@@ -97,13 +97,13 @@ export default function BusinessTypesView() {
   };
 
   return (
-    <div className="flex flex-col flex-1 h-full bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-semibold text-gray-800">
           Danh sách loại hình kinh doanh
         </h1>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <input
             type="file"
             ref={fileInputRef}
@@ -111,26 +111,28 @@ export default function BusinessTypesView() {
             accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
             className="hidden"
           />
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleImportClick}
             disabled={isImporting}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors disabled:opacity-50"
           >
-            <Upload className="w-4 h-4" />
-            {isImporting ? "Đang xử lý..." : "Thêm từ file"}
-          </button>
+            <Upload className="w-3.5 h-3.5 mr-1.5" />
+            {isImporting ? "Đang xử lý..." : "Import"}
+          </Button>
 
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
             Thêm mới
-          </button>
+          </Button>
         </div>
       </div>
 
-      <div className="flex-1 p-6 overflow-hidden flex flex-col">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col flex-1 overflow-hidden relative">
         <BusinessTypeTable
           data={businessTypes}
           isLoading={isLoading}

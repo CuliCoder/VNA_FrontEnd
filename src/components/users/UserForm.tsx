@@ -4,12 +4,13 @@ import React, { memo, useEffect, useRef, useState } from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Camera, Calendar } from "lucide-react";
+import { Camera, Calendar, Eye, EyeOff } from "lucide-react";
 import { adminUserService } from "@/services/adminUserService";
 import { useAddress } from "@/hooks/useAddress";
 import type { User, Role } from "@/types/auth";
 import type { CreateUserRequest, UpdateUserRequest } from "@/types/adminUser";
 import { toast } from "sonner";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 
 // ─── Schema ──────────────────────────────────────────────────────────────────
 // Schema duy nhất cho cả create/edit — tất cả optional ở base,
@@ -73,6 +74,7 @@ export default memo(function UserForm({
   const [loadingUser, setLoadingUser] = useState(isEdit);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     provinces,
@@ -100,7 +102,10 @@ export default memo(function UserForm({
     formState: { errors, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { isActive: true },
+    defaultValues: { 
+      isActive: true,
+      password: isEdit ? undefined : "12345678"
+    },
   });
 
   const avatarUrl = useWatch({ control, name: "avatarUrl" });
@@ -353,14 +358,23 @@ export default memo(function UserForm({
                 <label className="text-xs text-gray-500 font-medium">
                   Mật khẩu *
                 </label>
-                <input
-                  type="password"
-                  {...register("password")}
-                  disabled={readOnly}
-                  placeholder="Nhập mật khẩu"
-                  className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 ${errors.password ? "border-red-300 bg-red-50" : "border-gray-200"
-                    }`}
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    {...register("password")}
+                    disabled={readOnly}
+                    placeholder="Nhập mật khẩu"
+                    className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 pr-10 ${errors.password ? "border-red-300 bg-red-50" : "border-gray-200"
+                      }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
                 {errors.password && (
                   <p className="text-xs text-red-500">{errors.password.message}</p>
                 )}
@@ -539,27 +553,19 @@ export default memo(function UserForm({
               <label className="text-xs text-gray-500 font-medium">
                 Tỉnh/ thành phố
               </label>
-              <select
+              <SearchableSelect
                 disabled={readOnly}
-                className={`w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white ${readOnly ? "bg-gray-50 cursor-not-allowed" : ""
-                  }`}
+                loading={loadingProvinces}
                 value={selectedProvince}
-                onChange={(e) => {
-                  const code = Number(e.target.value) || undefined;
-                  handleProvinceChange(code ?? "");
-                  setValue("provinceId", code);
+                placeholder="-- Chọn tỉnh/ thành phố --"
+                options={provinces.map((p) => ({ value: p.code, label: p.name }))}
+                onChange={(code) => {
+                  const val = code === "" ? undefined : (code as number);
+                  handleProvinceChange(code as number | "");
+                  setValue("provinceId", val);
                   setValue("wardId", undefined);
                 }}
-              >
-                <option value="">
-                  {loadingProvinces ? "Đang tải..." : "-- Chọn tỉnh/ thành phố --"}
-                </option>
-                {provinces.map((p) => (
-                  <option key={p.code} value={p.code}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
             {/* Phường/Xã */}
@@ -567,26 +573,18 @@ export default memo(function UserForm({
               <label className="text-xs text-gray-500 font-medium">
                 Phường/ xã
               </label>
-              <select
-                disabled={readOnly}
-                className={`w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white ${readOnly ? "bg-gray-50 cursor-not-allowed" : ""
-                  }`}
+              <SearchableSelect
+                disabled={readOnly || !selectedProvince}
+                loading={loadingWards}
                 value={selectedWard}
-                onChange={(e) => {
-                  const code = Number(e.target.value) || undefined;
-                  setSelectedWard(code ?? "");
-                  setValue("wardId", code);
+                placeholder="-- Chọn phường/xã --"
+                options={wards.map((w) => ({ value: w.code, label: w.name }))}
+                onChange={(code) => {
+                  const val = code === "" ? undefined : (code as number);
+                  setSelectedWard(code as number | "");
+                  setValue("wardId", val);
                 }}
-              >
-                <option value="">
-                  {loadingWards ? "Đang tải..." : "-- Chọn phường/xã --"}
-                </option>
-                {wards.map((w) => (
-                  <option key={w.code} value={w.code}>
-                    {w.name}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
             {/* Địa chỉ */}
@@ -596,6 +594,7 @@ export default memo(function UserForm({
               </label>
               <input
                 {...register("address")}
+                autoComplete="street-address"
                 disabled={readOnly}
                 placeholder="Nhập địa chỉ cụ thể"
                 className={`w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 ${readOnly ? "bg-gray-50 cursor-not-allowed" : ""
