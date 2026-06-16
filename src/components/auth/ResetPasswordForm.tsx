@@ -2,20 +2,15 @@
 import * as React from "react";
 import { InputField } from "@/components/common/InputField";
 import { PasswordInput } from "@/components/common/PasswordInput";
-import { Alert } from "@/components/common/Alert";
 import { MESSAGES } from "@/constants/messages";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+
 export default function ResetPasswordForm({ email }: { email: string }) {
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmNewPassword, setConfirmNewPassword] = React.useState("");
   const [otp, setOtp] = React.useState("");
-  const [alertMsg, setAlertMsg] = React.useState<string | null>(null);
-  const { resetPassword, forgotPassword, isLoading, error, clearErrors } =
-    useAuth();
-  const [isSuccess, setIsSuccess] = React.useState(false);
-  React.useEffect(() => {
-    if (error) setAlertMsg(error);
-  }, [error]);
+  const { resetPassword, forgotPassword, isLoading } = useAuth();
   // --- Countdown ---
   const OTP_SECONDS = 5 * 60;
   const [countdown, setCountdown] = React.useState(OTP_SECONDS);
@@ -46,14 +41,12 @@ export default function ResetPasswordForm({ email }: { email: string }) {
   // --- Submit ---
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setAlertMsg(null);
-    setIsSuccess(false);
     if (!newPassword.trim() || !confirmNewPassword.trim() || !otp.trim()) {
-      setAlertMsg(error || MESSAGES.AUTH.RESET_PASSWORD_REQUIRED_FIELDS);
+      toast.error(MESSAGES.AUTH.RESET_PASSWORD_REQUIRED_FIELDS);
       return;
     }
     if (newPassword !== confirmNewPassword) {
-      setAlertMsg(error || MESSAGES.AUTH.RESET_PASSWORD_NOT_MATCH);
+      toast.error(MESSAGES.AUTH.RESET_PASSWORD_NOT_MATCH);
       return;
     }
 
@@ -65,14 +58,14 @@ export default function ResetPasswordForm({ email }: { email: string }) {
         confirmNewPassword,
       });
       if (res == null) {
-        setAlertMsg(error ?? MESSAGES.COMMON.UNKNOWN_ERROR);
+        toast.error(MESSAGES.COMMON.UNKNOWN_ERROR);
         return;
       }
-      setIsSuccess(true);
-      setAlertMsg(res?.message || MESSAGES.AUTH.RESET_PASSWORD_SUCCESS);
+      toast.success(res?.message || MESSAGES.AUTH.RESET_PASSWORD_SUCCESS);
       window.location.href = "/login";
-    } catch {
-      setAlertMsg(error ?? MESSAGES.COMMON.UNKNOWN_ERROR);
+    } catch (err) {
+      const msg = (err as { message?: string })?.message ?? MESSAGES.COMMON.UNKNOWN_ERROR;
+      toast.error(msg);
     }
   };
 
@@ -96,8 +89,6 @@ export default function ResetPasswordForm({ email }: { email: string }) {
         required
         onChange={(e) => {
           setNewPassword(e.target.value);
-          setAlertMsg(null);
-          clearErrors();
         }}
       />
 
@@ -109,8 +100,6 @@ export default function ResetPasswordForm({ email }: { email: string }) {
         required
         onChange={(e) => {
           setConfirmNewPassword(e.target.value);
-          setAlertMsg(null);
-          clearErrors();
         }}
       />
 
@@ -122,8 +111,6 @@ export default function ResetPasswordForm({ email }: { email: string }) {
         required
         onChange={(e) => {
           setOtp(e.target.value);
-          setAlertMsg(null);
-          clearErrors();
         }}
       />
 
@@ -149,14 +136,6 @@ export default function ResetPasswordForm({ email }: { email: string }) {
           </button>
         </p>
       </div>
-
-      {alertMsg && (
-        <Alert
-          variant={isSuccess ? "success" : "error"}
-          title={alertMsg}
-          onClose={() => setAlertMsg(null)}
-        />
-      )}
 
       <button
         type="submit"

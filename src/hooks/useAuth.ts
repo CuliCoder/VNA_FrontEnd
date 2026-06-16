@@ -32,27 +32,30 @@ export function useAuth() {
     setFieldErrors({});
   };
 
-  const withLoading = async <T>(fn: () => Promise<T>): Promise<T | null> => {
-    setIsLoading(true);
-    clearErrors();
-    try {
-      const result = await fn();
-      return result;
-    } catch (err) {
-      const apiErr = err as ApiError;
-      if (apiErr?.errors) {
-        const mapped: Record<string, string> = {};
-        Object.entries(apiErr.errors).forEach(([field, msgs]) => {
-          mapped[field] = msgs[0];
-        });
-        setFieldErrors(mapped);
+  const withLoading = React.useCallback(
+    async <T>(fn: () => Promise<T>): Promise<T | null> => {
+      setIsLoading(true);
+      clearErrors();
+      try {
+        const result = await fn();
+        return result;
+      } catch (err) {
+        const apiErr = err as ApiError;
+        if (apiErr?.errors) {
+          const mapped: Record<string, string> = {};
+          Object.entries(apiErr.errors).forEach(([field, msgs]) => {
+            mapped[field] = msgs[0];
+          });
+          setFieldErrors(mapped);
+        }
+        setError(apiErr?.message ?? MESSAGES.COMMON.UNKNOWN_ERROR);
+        return null;
+      } finally {
+        setIsLoading(false);
       }
-      setError(apiErr?.message ?? MESSAGES.COMMON.UNKNOWN_ERROR);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [],
+  );
 
   const login = async (
     payload: LoginRequest,
@@ -85,7 +88,7 @@ export function useAuth() {
     payload: ForgotPasswordRequest,
   ): Promise<ForgotPasswordResponse | null> => {
     return withLoading(async () => {
-      return await authService.forgotPassword(payload); 
+      return await authService.forgotPassword(payload);
     });
   };
 

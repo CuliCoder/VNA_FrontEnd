@@ -2,29 +2,36 @@
 import * as React from "react";
 import { InputField } from "@/components/common/InputField";
 import { PasswordInput } from "@/components/common/PasswordInput";
-import { Alert } from "@/components/common/Alert";
 import { MESSAGES } from "@/constants/messages";
 import { useAuth } from "@/hooks/useAuth";
 import AuthLayout from "@/components/auth/AuthLayout";
+import { toast } from "sonner";
+import { authService } from "@/services/authService"
+import { useToast } from "@/hooks/use-toast";
+
 export default function LoginPage() {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [rememberMe, setRememberMe] = React.useState(false);
-  const [alertMsg, setAlertMsg] = React.useState<string | null>(null);
 
-  const { login, isLoading, error, clearErrors } = useAuth();
-
-  const displayAlert = alertMsg ?? error;
+  const { login, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setAlertMsg(null);
 
     if (!username.trim() || !password.trim()) {
-      setAlertMsg(MESSAGES.AUTH.LOGIN_REQUIRED_FIELDS);
+      toast.error(MESSAGES.AUTH.LOGIN_REQUIRED_FIELDS);
       return;
     }
-    await login({ username, password, rememberMe });
+    try {
+      const res = await authService.login({ username, password, rememberMe });
+      toast.success(res.message || "Đăng nhập thành công");
+      window.location.href = "/dashboard/profile";
+    } catch (err) {
+      const msg =
+        (err as { message?: string })?.message ?? MESSAGES.COMMON.UNKNOWN_ERROR;
+      toast.error(msg);
+    }
   };
 
   return (
@@ -48,10 +55,7 @@ export default function LoginPage() {
           placeholder="nguyenvanb.stttt"
           id="username"
           value={username}
-          onChange={(e) => {
-            setUsername(e.target.value);
-            setAlertMsg(null);
-          }}
+          onChange={(e) => setUsername(e.target.value)}
         />
 
         <PasswordInput
@@ -59,13 +63,9 @@ export default function LoginPage() {
           placeholder="••••••••••••"
           id="password"
           value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            setAlertMsg(null);
-          }}
+          onChange={(e) => setPassword(e.target.value)}
         />
 
-        {/* Remember me + Forgot password */}
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input
@@ -77,24 +77,12 @@ export default function LoginPage() {
             <span className="text-sm text-gray-600">Nhớ đăng nhập</span>
           </label>
           <a
-            href="/ForgotPasswordPage"
+            href="/ForgotPassword"
             className="text-sm text-blue-600 hover:text-blue-700 hover:underline font-medium"
           >
             Quên mật khẩu
           </a>
         </div>
-
-        {/* Alert — hiện khi có lỗi */}
-        {displayAlert && (
-          <Alert
-            variant="error"
-            title={displayAlert}
-            onClose={() => {
-              setAlertMsg(null);
-              clearErrors();
-            }}
-          />
-        )}
 
         <button
           type="submit"

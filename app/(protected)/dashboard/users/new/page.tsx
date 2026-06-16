@@ -1,6 +1,17 @@
 "use client";
-import AccountForm from "@/components/profile/AccountForm";
-export default function ProfilePage() {
+
+import { useRouter } from "next/navigation";
+import UserForm from "@/components/users/UserForm";
+import type { User } from "@/types/auth";
+
+export default function NewUserPage() {
+  const router = useRouter();
+
+  const handleSaveSuccess = (user: User) => {
+    // Sau khi tạo thành công, chuyển sang trang edit
+    router.push(`/dashboard/users/${user.id}`);
+  };
+
   return (
     <div className="max-w-7xl mx-auto space-y-5">
       {/* Top action bar */}
@@ -11,13 +22,14 @@ export default function ProfilePage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
+            onClick={() => router.push("/dashboard/users")}
             className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-md transition"
           >
             Hủy bỏ
           </button>
           <button
             type="submit"
-            form="account-form"
+            form="user-form"
             className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition shadow-sm flex items-center gap-1.5"
           >
             <svg
@@ -37,7 +49,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <AccountForm />
+      <UserForm onSaveSuccess={handleSaveSuccess} />
     </div>
   );
 }

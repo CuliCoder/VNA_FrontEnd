@@ -46,77 +46,83 @@ export interface MenuItem {
   icon?: React.ElementType;
   /**
    * Roles that can see this menu item.
-   * The Sidebar will filter based on user.role.code.
    */
-  roles: RoleCode[];
+  roles?: RoleCode[];
+  /**
+   * Permissions required to see this menu item. User must have at least one of these permissions.
+   */
+  permissions?: PermissionCode[];
   children?: MenuItem[];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SIDEBAR_MENUS
-// Mỗi menu item chỉ hiển thị với đúng roles được chỉ định.
-//
-// Screen 1 (ADMIN + non-enterprise):  Hướng dẫn → Trang chủ → Hệ thống → ...
-// Screen 2 (ENTERPRISE):              Hệ thống (DN) → Tai nạn lao động
+// Mỗi menu item chỉ hiển thị với đúng roles hoặc permissions được chỉ định.
 // ─────────────────────────────────────────────────────────────────────────────
 export const SIDEBAR_MENUS: MenuItem[] = [
-  // ── ADMIN only ───────────────────────────────────────────────────────────
+  // ── ADMIN / INTERNAL USERS ───────────────────────────────────────────────
   {
     title: "Hệ thống",
     icon: Settings,
-    roles: ["ADMIN"],
+    permissions: [
+      "ROLE_MANAGE",
+      "USER_MANAGE",
+      "CATEGORY_MANAGE",
+      "ENTERPRISE_VIEW",
+      "PERIOD_MANAGE",
+    ],
     children: [
       {
         title: "Phân quyền",
         url: "/dashboard/permissions",
-        roles: ["ADMIN"],
+        permissions: ["ROLE_MANAGE"],
       },
       {
         title: "Vai trò",
         url: "/dashboard/roles",
-        roles: ["ADMIN"],
+        permissions: ["ROLE_MANAGE"],
       },
       {
-        title: "Tài khoản",
+        title: "Quản lý người dùng",
         url: "/dashboard/users",
-        roles: ["ADMIN"],
+        permissions: ["USER_MANAGE"],
       },
       {
         title: "Loại hình doanh nghiệp",
         url: "/dashboard/business/business-types",
-        roles: ["ADMIN"],
+        permissions: ["CATEGORY_MANAGE"],
       },
       {
         title: "Ngành nghề kinh doanh",
         url: "/dashboard/business/business-fields",
-        roles: ["ADMIN"],
+        permissions: ["CATEGORY_MANAGE"],
       },
       {
         title: "Quản lý doanh nghiệp",
         url: "/dashboard/business/businesses",
-        roles: ["ADMIN"],
+        permissions: ["ENTERPRISE_VIEW", "ENTERPRISE_APPROVE"],
       },
       {
         title: "Kỳ báo cáo",
         url: "/dashboard/periods",
-        roles: ["ADMIN"],
+        permissions: ["PERIOD_MANAGE"],
       },
     ],
   },
   {
     title: "Tai nạn lao động",
     icon: LayoutDashboard,
-    roles: ["ADMIN"],
+    permissions: ["CATEGORY_MANAGE", "REPORT_MANAGE", "REPORT_VIEW"],
     children: [
       {
         title: "Danh mục chung",
         url: "/dashboard/common-categories",
-        roles: ["ADMIN"],
+        permissions: ["CATEGORY_MANAGE"],
       },
       {
         title: "TNLD theo HĐLĐ",
         url: "/dashboard/accidents",
-        roles: ["ADMIN"],
+        permissions: ["REPORT_MANAGE", "REPORT_VIEW"],
       },
     ],
   },
@@ -146,11 +152,12 @@ export const SIDEBAR_MENUS: MenuItem[] = [
     ],
   },
 
-  // ── VIEWER (chỉ xem) ─────────────────────────────────────────────────────
+  // ── VIEWER / REPORTS ─────────────────────────────────────────────────────
   {
     title: "Báo cáo & Thống kê",
     url: "/dashboard/reports",
     icon: ClipboardCheck,
     roles: ["VIEWER"],
+    permissions: ["REPORT_VIEW", "REPORT_EXPORT"],
   },
 ];

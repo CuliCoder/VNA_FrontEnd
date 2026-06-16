@@ -11,11 +11,9 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
-// Các endpoint không áp dụng auto-refresh/redirect khi 401
 const AUTH_ENDPOINTS_NO_REDIRECT = [
   API_ENDPOINTS.AUTH.LOGIN,
   API_ENDPOINTS.AUTH.REFRESH_TOKEN,
-  API_ENDPOINTS.AUTH.ME,
 ];
 
 function isAuthEndpoint(url?: string): boolean {
@@ -32,7 +30,7 @@ let failedQueue: Array<{
 
 function processQueue(error: unknown) {
   failedQueue.forEach(({ resolve, reject }) =>
-    error ? reject(error) : resolve()
+    error ? reject(error) : resolve(),
   );
   failedQueue = [];
 }
@@ -65,14 +63,32 @@ apiClient.interceptors.response.use(
         await axios.post<RefreshTokenResponse>(
           `${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.REFRESH_TOKEN}`,
           {},
-          { withCredentials: true }
+          { withCredentials: true },
         );
         processQueue(null);
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError);
         storage.clearAll();
-        window.location.href = "/login";
+
+        // Call logout to clear httpOnly cookies on the backend before redirecting
+        try {
+          await axios.post(
+            `${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.LOGOUT}`,
+            {},
+            { withCredentials: true }
+          );
+        } catch (e) {
+          // ignore
+        }
+
+        const publicRoutes = ["/login", "/register", "/ForgotPassword"];
+        const isPublic = publicRoutes.some((r) =>
+          window.location.pathname.startsWith(r),
+        );
+        if (!isPublic) {
+          window.location.href = "/login";
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -89,7 +105,7 @@ apiClient.interceptors.response.use(
     };
 
     return Promise.reject(apiError);
-  }
+  },
 );
 
 export default apiClient;
