@@ -89,17 +89,17 @@ export const SIDEBAR_MENUS: MenuItem[] = [
       },
       {
         title: "Loại hình doanh nghiệp",
-        url: "/dashboard/business-types",
+        url: "/dashboard/business/business-types",
         permissions: ["CATEGORY_MANAGE"],
       },
       {
         title: "Ngành nghề kinh doanh",
-        url: "/dashboard/industries",
+        url: "/dashboard/business/business-fields",
         permissions: ["CATEGORY_MANAGE"],
       },
       {
         title: "Quản lý doanh nghiệp",
-        url: "/dashboard/businesses",
+        url: "/dashboard/business/businesses",
         permissions: ["ENTERPRISE_VIEW", "ENTERPRISE_APPROVE"],
       },
       {
