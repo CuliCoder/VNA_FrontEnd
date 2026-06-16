@@ -1,107 +1,135 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Eye, Upload, Trash2 } from "lucide-react";
 import { businessService, BusinessProfileRequest } from "@/services/businessService";
 import { toast } from "sonner";
+import { useAddress } from "@/hooks/useAddress";
 
 const businessSchema = z.object({
-  businessName: z.string().min(1, "Tên doanh nghiệp là bắt buộc"),
+  name: z.string().min(1, "Tên doanh nghiệp là bắt buộc"),
   taxCode: z.string().min(1, "Mã số thuế là bắt buộc"),
-  businessType: z.string().min(1, "Loại hình kinh doanh là bắt buộc"),
-  mainBusinessLine: z.string().min(1, "Ngành nghề kinh doanh là bắt buộc"),
-  licenseDate: z.string().optional(),
-  provinceRegistration: z.string().optional(),
-  wardRegistration: z.string().optional(),
-  addressRegistration: z.string().optional(),
-  foreignName: z.string().optional(),
+  businessTypeId: z.number().min(1, "Loại hình kinh doanh là bắt buộc"),
+  businessFieldId: z.number().min(1, "Ngành nghề kinh doanh chính là bắt buộc"),
+  licenseIssueDate: z.string().optional(),
+  provinceId: z.number().optional(),
+  wardId: z.number().optional(),
+  registeredAddress: z.string().optional(),
+  englishName: z.string().optional(),
   email: z.string().min(1, "Email là bắt buộc").email("Email không hợp lệ"),
-  phone: z.string().optional(),
-  provinceOperation: z.string().optional(),
-  wardOperation: z.string().optional(),
-  addressOperation: z.string().optional(),
+  officePhone: z.string().optional(),
+  provinceIdActivity: z.number().optional(),
+  wardIdActivity: z.number().optional(),
+  operatingAddress: z.string().optional(),
   representativeName: z.string().optional(),
   representativePhone: z.string().optional(),
 });
 
 type BusinessFormValues = z.infer<typeof businessSchema>;
 
-const PROVINCES = [
-  { value: "HCM", label: "Thành phố Hồ Chí Minh" },
-  { value: "HN", label: "Hà Nội" },
-  { value: "DN", label: "Đà Nẵng" },
-];
-
-const WARDS: Record<string, { value: string; label: string }[]> = {
-  HCM: [
-    { value: "HBP", label: "Phường Hiệp Bình Phước" },
-    { value: "GV", label: "Phường Gò Vấp" },
-    { value: "Q1", label: "Quận 1" },
-  ],
-  HN: [
-    { value: "HK", label: "Hoàn Kiếm" },
-    { value: "BD", label: "Ba Đình" },
-  ],
-};
-
 const BUSINESS_TYPES = [
-  "Công ty TNHH 1 thành viên",
-  "Công ty TNHH 2 thành viên trở lên",
-  "Công ty Cổ phần",
-  "Doanh nghiệp tư nhân",
-  "Hộ kinh doanh",
+  { id: 1, label: "Công ty TNHH 1 thành viên" },
+  { id: 2, label: "Công ty TNHH 2 thành viên trở lên" },
+  { id: 3, label: "Công ty Cổ phần" },
+  { id: 4, label: "Doanh nghiệp tư nhân" },
+  { id: 5, label: "Hộ kinh doanh" },
 ];
 
 const BUSINESS_LINES = [
-  { code: "4669", label: "Bán buôn chuyên doanh khác chưa được phân vào đâu" },
-  { code: "6201", label: "Lập trình máy vi tính" },
-  { code: "7010", label: "Hoạt động của trụ sở văn phòng" },
+  { id: 1, code: "4669", label: "Bán buôn chuyên doanh khác chưa được phân vào đâu" },
+  { id: 2, code: "6201", label: "Lập trình máy vi tính" },
+  { id: 3, code: "7010", label: "Hoạt động của trụ sở văn phòng" },
 ];
 
-type AttachmentRow = { name: string; filename: string };
-const ATTACHMENT_ROWS: AttachmentRow[] = [
-  { name: "Giấy phép kinh doanh", filename: "GPKD.pdf" },
-  { name: "Giấy tờ khác", filename: "GTK1.pdf" },
-];
+type AttachedDoc = {
+  id: string;
+  documentName: string;
+  documentType: string;
+  fileData?: {
+    url: string;
+    fileName: string;
+    mimeType: string;
+    fileSize: number;
+  };
+  isUploading?: boolean;
+  isDeleting?: boolean;
+};
 
 export default function BusinessForm() {
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedProvince, setSelectedProvince] = useState("HCM");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currentUploadId, setCurrentUploadId] = useState<string | null>(null);
+
+  const [attachments, setAttachments] = useState<AttachedDoc[]>([
+    { id: "GPKD", documentName: "Giấy phép kinh doanh", documentType: "GPKD" },
+    { id: "GTK1", documentName: "Giấy tờ khác", documentType: "OTHER" },
+  ]);
+
+  const {
+    provinces: provincesReg,
+    wards: wardsReg,
+    selectedProvince: selectedProvinceReg,
+    selectedWard: selectedWardReg,
+    loadingProvinces: loadingProvincesReg,
+    loadingWards: loadingWardsReg,
+    handleProvinceChange: handleProvinceRegChange,
+    setSelectedWard: setSelectedWardReg,
+  } = useAddress();
+
+  const {
+    provinces: provincesAct,
+    wards: wardsAct,
+    selectedProvince: selectedProvinceAct,
+    selectedWard: selectedWardAct,
+    loadingProvinces: loadingProvincesAct,
+    loadingWards: loadingWardsAct,
+    handleProvinceChange: handleProvinceActChange,
+    setSelectedWard: setSelectedWardAct,
+  } = useAddress();
 
   const {
     register,
     handleSubmit,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<BusinessFormValues>({
     resolver: zodResolver(businessSchema),
-    defaultValues: {
-      provinceRegistration: "HCM",
-    },
   });
 
   const onSubmit = async (data: BusinessFormValues) => {
     setIsSaving(true);
     try {
       const payload: BusinessProfileRequest = {
-        businessName: data.businessName,
+        name: data.name,
         taxCode: data.taxCode,
-        businessType: data.businessType,
-        mainBusinessLine: data.mainBusinessLine,
-        licenseDate: data.licenseDate || "",
-        provinceRegistration: data.provinceRegistration || "",
-        wardRegistration: data.wardRegistration || "",
-        addressRegistration: data.addressRegistration || "",
-        foreignName: data.foreignName,
+        businessTypeId: data.businessTypeId,
+        businessFieldId: data.businessFieldId,
+        licenseIssueDate: data.licenseIssueDate,
+        provinceId: data.provinceId,
+        wardId: data.wardId,
+        registeredAddress: data.registeredAddress,
+        englishName: data.englishName,
         email: data.email,
-        phone: data.phone,
-        provinceOperation: data.provinceOperation,
-        wardOperation: data.wardOperation,
-        addressOperation: data.addressOperation,
+        officePhone: data.officePhone,
+        provinceIdActivity: data.provinceIdActivity,
+        wardIdActivity: data.wardIdActivity,
+        operatingAddress: data.operatingAddress,
         representativeName: data.representativeName,
         representativePhone: data.representativePhone,
+        documents: attachments
+          .filter((a) => a.fileData)
+          .map((a) => ({
+            documentName: a.documentName,
+            documentType: a.documentType,
+            fileName: a.fileData!.fileName,
+            filePath: a.fileData!.url,
+            mimeType: a.fileData!.mimeType,
+            fileSize: a.fileData!.fileSize,
+          })),
       };
       await businessService.createBusiness(payload);
       toast.success("Lưu thông tin doanh nghiệp thành công!");
@@ -119,10 +147,69 @@ export default function BusinessForm() {
 
   const selectClass = "w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white";
 
+  const handleUploadClick = (id: string) => {
+    setCurrentUploadId(id);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentUploadId) return;
+
+    setAttachments((prev) =>
+      prev.map((a) => (a.id === currentUploadId ? { ...a, isUploading: true } : a))
+    );
+
+    try {
+      const taxCode = getValues("taxCode");
+      const res = await businessService.uploadFile(file, taxCode || undefined);
+      setAttachments((prev) =>
+        prev.map((a) =>
+          a.id === currentUploadId
+            ? { ...a, isUploading: false, fileData: res }
+            : a
+        )
+      );
+      toast.success("Tải file lên thành công!");
+    } catch (error) {
+      setAttachments((prev) =>
+        prev.map((a) => (a.id === currentUploadId ? { ...a, isUploading: false } : a))
+      );
+      toast.error("Tải file lên thất bại!");
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      setCurrentUploadId(null);
+    }
+  };
+
+  const handleDeleteClick = async (id: string) => {
+    const doc = attachments.find((a) => a.id === id);
+    if (!doc?.fileData) return;
+
+    setAttachments((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, isDeleting: true } : a))
+    );
+    try {
+      await businessService.deleteFile(doc.fileData.url);
+      setAttachments((prev) =>
+        prev.map((a) =>
+          a.id === id ? { ...a, isDeleting: false, fileData: undefined } : a
+        )
+      );
+      toast.success("Xóa file thành công!");
+    } catch (error) {
+      setAttachments((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, isDeleting: false } : a))
+      );
+      toast.error("Xóa file thất bại!");
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       
-
       <form id="business-form" onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-8">
         {/* Section 1: Basic Business Info */}
         <div className="space-y-4">
@@ -131,11 +218,11 @@ export default function BusinessForm() {
             <div className="space-y-1.5">
               <label className="text-xs text-gray-500 font-medium">Tên doanh nghiệp <span className="text-red-500">*</span></label>
               <input
-                {...register("businessName")}
+                {...register("name")}
                 placeholder="Nhập tên doanh nghiệp"
-                className={fieldClass(!!errors.businessName)}
+                className={fieldClass(!!errors.name)}
               />
-              {errors.businessName && <p className="text-xs text-red-500">{errors.businessName.message}</p>}
+              {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -150,30 +237,31 @@ export default function BusinessForm() {
 
             <div className="space-y-1.5">
               <label className="text-xs text-gray-500 font-medium">Loại hình kinh doanh <span className="text-red-500">*</span></label>
-              <select {...register("businessType")} className={selectClass}>
+              <select {...register("businessTypeId", { valueAsNumber: true })} className={fieldClass(!!errors.businessTypeId)}>
                 <option value="">-- Chọn loại hình --</option>
                 {BUSINESS_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t.id} value={t.id}>{t.label}</option>
                 ))}
               </select>
-              {errors.businessType && <p className="text-xs text-red-500">{errors.businessType.message}</p>}
+              {errors.businessTypeId && <p className="text-xs text-red-500">{errors.businessTypeId.message}</p>}
             </div>
 
             <div className="space-y-1.5 col-span-2">
               <label className="text-xs text-gray-500 font-medium">Ngành nghề kinh doanh chính <span className="text-red-500">*</span></label>
-              <select {...register("mainBusinessLine")} className={selectClass}>
+              <select {...register("businessFieldId", { valueAsNumber: true })} className={fieldClass(!!errors.businessFieldId)}>
                 <option value="">-- Chọn ngành nghề --</option>
                 {BUSINESS_LINES.map((l) => (
-                  <option key={l.code} value={l.code}>{l.code} - {l.label}</option>
+                  <option key={l.id} value={l.id}>{l.code} - {l.label}</option>
                 ))}
               </select>
+              {errors.businessFieldId && <p className="text-xs text-red-500">{errors.businessFieldId.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs text-gray-500 font-medium">Ngày cấp GPKD</label>
               <input
                 type="date"
-                {...register("licenseDate")}
+                {...register("licenseIssueDate")}
                 className={fieldClass()}
               />
             </div>
@@ -181,23 +269,40 @@ export default function BusinessForm() {
             <div className="space-y-1.5">
               <label className="text-xs text-gray-500 font-medium">Tỉnh/Thành phố ĐKKD <span className="text-red-500">*</span></label>
               <select
-                {...register("provinceRegistration")}
                 className={selectClass}
-                onChange={(e) => setSelectedProvince(e.target.value)}
+                value={selectedProvinceReg}
+                onChange={(e) => {
+                  const code = Number(e.target.value) || undefined;
+                  handleProvinceRegChange(code ?? "");
+                  setValue("provinceId", code);
+                  setValue("wardId", undefined);
+                }}
               >
-                <option value="">-- Chọn tỉnh/thành phố --</option>
-                {PROVINCES.map((p) => (
-                  <option key={p.value} value={p.value}>{p.label}</option>
+                <option value="">
+                  {loadingProvincesReg ? "Đang tải..." : "-- Chọn tỉnh/thành phố --"}
+                </option>
+                {provincesReg.map((p) => (
+                  <option key={p.code} value={p.code}>{p.name}</option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs text-gray-500 font-medium">Phường/Xã ĐKKD <span className="text-red-500">*</span></label>
-              <select {...register("wardRegistration")} className={selectClass}>
-                <option value="">-- Chọn phường/xã --</option>
-                {(WARDS[selectedProvince] || []).map((w) => (
-                  <option key={w.value} value={w.value}>{w.label}</option>
+              <select
+                className={selectClass}
+                value={selectedWardReg}
+                onChange={(e) => {
+                  const code = Number(e.target.value) || undefined;
+                  setSelectedWardReg(code ?? "");
+                  setValue("wardId", code);
+                }}
+              >
+                <option value="">
+                  {loadingWardsReg ? "Đang tải..." : "-- Chọn phường/xã --"}
+                </option>
+                {wardsReg.map((w) => (
+                  <option key={w.code} value={w.code}>{w.name}</option>
                 ))}
               </select>
             </div>
@@ -205,7 +310,7 @@ export default function BusinessForm() {
             <div className="space-y-1.5 col-span-2">
               <label className="text-xs text-gray-500 font-medium">Địa chỉ</label>
               <input
-                {...register("addressRegistration")}
+                {...register("registeredAddress")}
                 placeholder="Nhập địa chỉ trụ sở"
                 className={fieldClass()}
               />
@@ -221,7 +326,7 @@ export default function BusinessForm() {
           <div className="grid grid-cols-3 gap-5">
             <div className="space-y-1.5">
               <input
-                {...register("foreignName")}
+                {...register("englishName")}
                 placeholder="Tên viết bằng tiếng nước ngoài"
                 className={fieldClass()}
               />
@@ -236,40 +341,58 @@ export default function BusinessForm() {
                 />
                 {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
               </div>
-              <button type="button" className="shrink-0 px-3 py-2 text-sm text-blue-600 font-medium hover:bg-blue-50 rounded-md border border-blue-200 transition h-fit">
-                Thay đổi
-              </button>
             </div>
 
             <div className="space-y-1.5">
               <input
-                {...register("phone")}
+                {...register("officePhone")}
                 placeholder="Số điện thoại cơ quan"
                 className={fieldClass()}
               />
             </div>
 
             <div className="space-y-1.5">
-              <select {...register("provinceOperation")} className={selectClass}>
-                <option value="">Tỉnh/TP hoạt động KD</option>
-                {PROVINCES.map((p) => (
-                  <option key={p.value} value={p.value}>{p.label}</option>
+              <select
+                className={selectClass}
+                value={selectedProvinceAct}
+                onChange={(e) => {
+                  const code = Number(e.target.value) || undefined;
+                  handleProvinceActChange(code ?? "");
+                  setValue("provinceIdActivity", code);
+                  setValue("wardIdActivity", undefined);
+                }}
+              >
+                <option value="">
+                  {loadingProvincesAct ? "Đang tải..." : "Tỉnh/TP hoạt động KD"}
+                </option>
+                {provincesAct.map((p) => (
+                  <option key={p.code} value={p.code}>{p.name}</option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-1.5">
-              <select {...register("wardOperation")} className={selectClass}>
-                <option value="">Phường/xã hoạt động KD</option>
-                {(WARDS[selectedProvince] || []).map((w) => (
-                  <option key={w.value} value={w.value}>{w.label}</option>
+              <select
+                className={selectClass}
+                value={selectedWardAct}
+                onChange={(e) => {
+                  const code = Number(e.target.value) || undefined;
+                  setSelectedWardAct(code ?? "");
+                  setValue("wardIdActivity", code);
+                }}
+              >
+                <option value="">
+                  {loadingWardsAct ? "Đang tải..." : "Phường/xã hoạt động KD"}
+                </option>
+                {wardsAct.map((w) => (
+                  <option key={w.code} value={w.code}>{w.name}</option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-1.5">
               <input
-                {...register("addressOperation")}
+                {...register("operatingAddress")}
                 placeholder="Địa điểm kinh doanh"
                 className={fieldClass()}
               />
@@ -306,33 +429,55 @@ export default function BusinessForm() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {ATTACHMENT_ROWS.map((row) => (
-                  <tr key={row.name} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-4 py-3 text-gray-800 font-medium">{row.name}</td>
-                    <td className="px-4 py-3 text-gray-500">{row.filename}</td>
+                {attachments.map((doc) => (
+                  <tr key={doc.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-4 py-3 text-gray-800 font-medium">{doc.documentName}</td>
+                    <td className="px-4 py-3 text-gray-500">
+                      {doc.fileData ? (
+                        <a href={doc.fileData.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                          {doc.fileData.fileName}
+                        </a>
+                      ) : (
+                        <span className="italic text-gray-400">Chưa có file</span>
+                      )}
+                      {doc.isUploading && <span className="ml-2 text-blue-500 text-xs">Đang tải lên...</span>}
+                      {doc.isDeleting && <span className="ml-2 text-red-500 text-xs">Đang xóa...</span>}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-center gap-1">
-                        <button
-                          type="button"
-                          title="Xem"
-                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          title="Tải lên"
-                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition"
-                        >
-                          <Upload className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          title="Xóa"
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {doc.fileData && (
+                          <a
+                            href={doc.fileData.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="Xem"
+                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition inline-block"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </a>
+                        )}
+                        {!doc.fileData && (
+                          <button
+                            type="button"
+                            title="Tải lên"
+                            onClick={() => handleUploadClick(doc.id)}
+                            disabled={doc.isUploading}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition disabled:opacity-50"
+                          >
+                            <Upload className="w-4 h-4" />
+                          </button>
+                        )}
+                        {doc.fileData && (
+                          <button
+                            type="button"
+                            title="Xóa"
+                            onClick={() => handleDeleteClick(doc.id)}
+                            disabled={doc.isDeleting}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition disabled:opacity-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -341,6 +486,14 @@ export default function BusinessForm() {
             </table>
           </div>
         </div>
+
+        {/* Hidden file input */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          onChange={handleFileChange}
+        />
       </form>
     </div>
   );

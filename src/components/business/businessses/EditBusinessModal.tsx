@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import BusinessForm from "./BusinessForm";
 import { businessService, Enterprise } from "@/services/businessService";
-
+import { toast } from "sonner";
 interface Props {
   open: boolean;
   enterprise: Enterprise | null;
@@ -19,13 +19,19 @@ export default function EditBusinessModal({
 }: Props) {
   const handleSubmit = async (payload: any) => {
     if (!enterprise?.id) return;
-
+    try {
+      const { taxCode, ...updatePayload } = payload;
+      const res = await businessService.updateEnterprise(enterprise.id, updatePayload);
+      toast.success("Cập nhật doanh nghiệp thành công");
+      onClose();
+      onSuccess();
+    } catch (error: any) {
+      error.message.forEach((message: string) => {
+        toast.error(message);
+      });
+    }
     // taxCode is immutable/identifier — do not send it in update payload
-    const { taxCode, ...updatePayload } = payload;
-    await businessService.updateEnterprise(enterprise.id, updatePayload);
 
-    onClose();
-    onSuccess();
   };
 
   // ESC to close
@@ -44,7 +50,7 @@ export default function EditBusinessModal({
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-      
+
       {/* OVERLAY */}
       <div
         className="absolute inset-0 bg-black/40"

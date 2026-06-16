@@ -34,5 +34,20 @@ export const businessTypeService = {
 
   deleteBusinessTypes: async (ids: number[]) => {
     await Promise.all(ids.map(id => apiClient.delete(API_ENDPOINTS.BUSINESS_TYPES.DETAIL(id))));
+  },
+
+  importBusinessTypes: async (file: File): Promise<{ message: string }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await apiClient.post<{ message: string }>(
+      API_ENDPOINTS.BUSINESS_TYPES.IMPORT,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return res.data;
   }
 };

@@ -176,20 +176,30 @@ export function ViewDetailModal({ open, enterprise, onClose }: ViewDetailModalPr
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {[
-                    { name: "Giấy phép kinh doanh", file: "GPKD.pdf" },
-                    { name: "Giấy tờ khác", file: "GTK1.pdf" },
-                  ].map((f) => (
-                    <tr key={f.name}>
-                      <td className="px-4 py-2.5 text-gray-700">{f.name}</td>
-                      <td className="px-4 py-2.5 text-gray-500">{f.file}</td>
-                      <td className="px-4 py-2.5 text-center">
-                        <button className="text-blue-500 hover:text-blue-700 transition">
-                          <Eye className="w-4 h-4" />
-                        </button>
+                  {enterprise.documents && enterprise.documents.length > 0 ? (
+                    enterprise.documents.map((doc, idx) => (
+                      <tr key={idx}>
+                        <td className="px-4 py-2.5 text-gray-700">{doc.documentName || doc.documentType}</td>
+                        <td className="px-4 py-2.5 text-gray-500">{doc.fileName}</td>
+                        <td className="px-4 py-2.5 text-center">
+                          <a
+                            href={doc.filePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:text-blue-700 transition inline-block"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </a>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-4 text-center text-gray-500 text-sm">
+                        Không có file đính kèm
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -247,14 +257,10 @@ export function ChangePasswordModal({
       setError("Vui lòng nhập mật khẩu mới.");
       return;
     }
-    if (newPassword.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự.");
-      return;
-    }
     setIsLoading(true);
     setError(null);
     try {
-      await businessService.changePassword({
+      const result = await businessService.changePassword({
         username: enterprise.user?.username || enterprise.taxCode,
         newPassword: newPassword,
       });
@@ -263,8 +269,8 @@ export function ChangePasswordModal({
         onSuccess?.();
         handleClose();
       }, 1200);
-    } catch {
-      setError("Không thể đổi mật khẩu. Vui lòng thử lại.");
+    } catch (ex:any){
+      setError(ex?.message[0]);
     } finally {
       setIsLoading(false);
     }

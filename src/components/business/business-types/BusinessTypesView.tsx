@@ -1,16 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Plus, Download, Upload } from "lucide-react";
 import BusinessTypeTable from "./BusinessTypeTable";
 import AddBusinessTypeModal from "./AddBusinessTypeModal";
 import { businessTypeService, BusinessType } from "@/services/businessTypeService";
 import { DeleteConfirmModal } from "../businessses/BusinessesModal";
+import { toast } from "sonner";
 
 export default function BusinessTypesView() {
   const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Pagination & Filter States
   const [page, setPage] = useState(1);
@@ -27,8 +30,8 @@ export default function BusinessTypesView() {
       await businessTypeService.deleteBusinessTypes(deleteIds);
       setDeleteIds([]);
       fetchBusinessTypes();
-    } catch (err) {
-      console.error("Xóa thất bại:", err);
+    } catch (err: any) {
+      toast.error(err.message);
     } finally {
       setIsDeleting(false);
     }
@@ -50,6 +53,28 @@ export default function BusinessTypesView() {
     }
   };
 
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+    try {
+      const res = await businessTypeService.importBusinessTypes(file);
+      fetchBusinessTypes();
+      toast.success(res.message);
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   useEffect(() => {
     fetchBusinessTypes();
   }, [page, limit]);
@@ -64,9 +89,8 @@ export default function BusinessTypesView() {
           item.id === id ? { ...item, status } : item
         )
       );
-    } catch (error) {
-      console.error("Failed to update status", error);
-
+    } catch (error: any) {
+      toast.error("Cập nhật thất bại", error.message);
       // Revert if API fails
       fetchBusinessTypes();
     }
@@ -80,9 +104,20 @@ export default function BusinessTypesView() {
         </h1>
 
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+            className="hidden"
+          />
+          <button
+            onClick={handleImportClick}
+            disabled={isImporting}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors disabled:opacity-50"
+          >
             <Upload className="w-4 h-4" />
-            Thêm từ file
+            {isImporting ? "Đang xử lý..." : "Thêm từ file"}
           </button>
 
           <button

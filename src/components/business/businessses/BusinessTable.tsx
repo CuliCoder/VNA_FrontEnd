@@ -125,8 +125,9 @@ export default function BusinessTable({
       (!filterField || item.businessField?.code === filterField) &&
       (!filterWard || item.registeredAddress?.toLowerCase().includes(filterWard.toLowerCase())) &&
       (filterStatus === "" ||
-        (filterStatus === "active" && item.user?.isActive) ||
-        (filterStatus === "inactive" && !item.user?.isActive))
+        (filterStatus === "active" && item.status === "APPROVED") ||
+        (filterStatus === "rejected" && item.status === "REJECTED") ||
+        (filterStatus === "pending" && item.status === "PENDING"))
     );
   });
 
@@ -210,7 +211,7 @@ export default function BusinessTable({
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
                   >
-                    <option value=""></option>
+                    <option value="">Tất cả</option>
                     {businessTypes.map(t => (
                       <option key={t.id} value={t.code}>{t.name}</option>
                     ))}
@@ -228,7 +229,7 @@ export default function BusinessTable({
                     value={filterField}
                     onChange={(e) => setFilterField(e.target.value)}
                   >
-                    <option value=""></option>
+                    <option value="">Tất cả</option>
                     {businessFields.map(f => (
                       <option key={f.id} value={f.code}>{f.name}</option>
                     ))}
@@ -257,9 +258,10 @@ export default function BusinessTable({
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                   >
-                    <option value=""></option>
+                    <option value="">Tất cả</option>
                     <option value="active">Hoạt động</option>
-                    <option value="inactive">Ngừng HĐ</option>
+                    <option value="rejected">Ngừng HĐ</option>
+                    <option value="pending">Chờ duyệt</option>
                   </select>
                   <ChevronDown className="absolute right-1.5 top-1.5 h-3 w-3 text-gray-400 pointer-events-none" />
                 </div>

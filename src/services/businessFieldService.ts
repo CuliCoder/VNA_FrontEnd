@@ -64,4 +64,18 @@ export const businessFieldService = {
       API_ENDPOINTS.BUSINESS_FIELDS.DETAIL(id)
     );
   },
+
+  importBusinessFields: async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return await apiClient.post<ApiResponse<any>>(
+      API_ENDPOINTS.BUSINESS_FIELDS.IMPORT,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+  },
 };

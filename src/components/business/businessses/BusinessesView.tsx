@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Plus, Upload } from "lucide-react";
+import { toast } from "sonner";
+import Link from "next/link";
 import BusinessTable from "./BusinessTable";
 import EditBusinessModal from "./EditBusinessModal";
 import {
@@ -21,6 +23,8 @@ export default function BusinessesView() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Modal state ────────────────────────────────────────────────────────
   const [viewTarget, setViewTarget] = useState<Enterprise | null>(null);
@@ -56,9 +60,33 @@ export default function BusinessesView() {
   ) => {
     try {
       await businessService.updateStatus(id, status);
+      toast.success("Cập nhật trạng thái thành công");
       fetchData();
-    } catch {
+    } catch (err: any) {
+      toast.error(err.message || "Cập nhật trạng thái thất bại");
       fetchData();
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+    try {
+      const res = await businessService.importEnterprises(file);
+      fetchData();
+      toast.success(res.data?.message || "Nhập file thành công");
+    } catch (error: any) {
+      toast.error(error.message || "Nhập file thất bại");
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -70,11 +98,11 @@ export default function BusinessesView() {
     setIsDeleting(true);
     try {
       await businessService.deleteEnterprises(deleteIds);
-
       setDeleteIds([]);
-
+      toast.success("Xóa thành công");
       await fetchData();
-    } catch (err) {
+    } catch (err: any) {
+      toast.error(err.message || "Xóa thất bại");
       console.error("Xóa thất bại:", err);
     } finally {
       setIsDeleting(false);
@@ -91,18 +119,29 @@ export default function BusinessesView() {
         </h1>
 
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+            className="hidden"
+          />
+          <button 
+            onClick={handleImportClick}
+            disabled={isImporting}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors disabled:opacity-50"
+          >
             <Upload className="w-4 h-4" />
-            Thêm từ file
+            {isImporting ? "Đang xử lý..." : "Thêm từ file"}
           </button>
 
-          <a
+          <Link
             href="/dashboard/business/create"
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Thêm mới
-          </a>
+          </Link>
         </div>
       </div>
 

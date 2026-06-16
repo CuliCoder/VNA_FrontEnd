@@ -11,6 +11,7 @@ import ValidationModal from "@/components/common/ValidationModal";
 import { loadBusinessDraft, clearBusinessDraft } from "@/lib/sessionForm";
 import { useEffect } from "react";
 import axios from "axios";
+import { toast } from "sonner";
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
 
@@ -29,10 +30,10 @@ function StepIndicator({ currentStep }: { currentStep: 1 | 2 }) {
             <div className="flex items-center gap-2">
               <span
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all ${isDone
-                    ? "bg-green-500 text-white"
-                    : isActive
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                      : "bg-gray-200 text-gray-400"
+                  ? "bg-green-500 text-white"
+                  : isActive
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                    : "bg-gray-200 text-gray-400"
                   }`}
               >
                 {isDone ? (
@@ -211,34 +212,37 @@ export default function CreateBusinessPage() {
         }
 
         // Build finalDocuments: use uploaded info where applicable, else use existing filePath/fileName
-        finalDocuments = formData.documents.map((d: any, i: number) => {
-          const uploadPos = uploadIndexMap.indexOf(i);
-          if (uploadPos !== -1) {
-            const up = uploaded[uploadPos];
-            return {
-              documentName: d.documentName || up.documentName,
-              documentType: up.documentType || d.documentType,
-              fileName: up.fileName || d.fileName,
-              filePath: up.filePath || d.filePath,
-              mimeType: up.mimeType || d.mimeType,
-              fileSize: up.fileSize || d.fileSize,
-            };
-          }
+        finalDocuments = formData.documents
+          .map((d: any, i: number) => {
+            const uploadPos = uploadIndexMap.indexOf(i);
+            if (uploadPos !== -1) {
+              const up = uploaded[uploadPos];
+              return {
+                documentName: d.documentName || up?.documentName,
+                documentType: up?.documentType || d.documentType,
+                fileName: up?.fileName || d.fileName,
+                filePath: up?.filePath || d.filePath,
+                mimeType: up?.mimeType || d.mimeType,
+                fileSize: up?.fileSize || d.fileSize,
+              };
+            }
 
-          // already uploaded or provided filePath — ensure we don't send `file`/`url`
-          return {
-            documentName: d.documentName,
-            documentType: d.documentType,
-            fileName: d.fileName,
-            filePath: d.filePath || d.url,
-            mimeType: d.mimeType,
-            fileSize: d.fileSize,
-          };
-        });
+            // already uploaded or provided filePath — ensure we don't send `file`/`url`
+            return {
+              documentName: d.documentName,
+              documentType: d.documentType,
+              fileName: d.fileName,
+              filePath: d.filePath || d.url,
+              mimeType: d.mimeType,
+              fileSize: d.fileSize,
+            };
+          })
+          .filter((d: any) => d.filePath || d.fileName); // Ensure we don't send empty document placeholders
       }
 
       const payload = mapReviewToBusinessRequest({ ...formData, documents: finalDocuments });
       const result = await businessService.createBusiness(payload);
+      toast.success("Đăng ký doanh nghiệp thành công!");
 
       // clear draft on successful submit
       try {
@@ -267,11 +271,13 @@ export default function CreateBusinessPage() {
         isAxios: axios.isAxiosError(err),
       });
       // Try to extract validation messages from the backend response
-      const msgs: string[] | undefined = err?.response?.data?.messages || err?.response?.data?.errors;
+      const msgs = err?.errors || err?.response?.data?.messages || err?.response?.data?.errors;
       if (Array.isArray(msgs) && msgs.length > 0) {
         setValidationMessages(msgs.map(String));
+      } else if (err?.message) {
+        toast.error(err.message);
       } else {
-        setSubmitError("Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.");
+        toast.error("Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.");
       }
     } finally {
       setIsSubmitting(false);
@@ -281,7 +287,7 @@ export default function CreateBusinessPage() {
   // ── Close popup → redirect ────────────────────────────────────────────
   const handleClosePopup = () => {
     setAccountInfo(null);
-    router.push("/dashboard/businesses");
+    router.push("/dashboard/business/businesses");
   };
 
   // ── Render ────────────────────────────────────────────────────────────
