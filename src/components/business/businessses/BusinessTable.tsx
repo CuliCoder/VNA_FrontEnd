@@ -1,40 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
-import { Eye, Pencil, KeyRound, ChevronLeft, ChevronRight, ChevronDown, Check } from "lucide-react";
-import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
+import React, { useState, useEffect, useMemo } from "react";
+import { Eye, Pencil, KeyRound, ChevronDown } from "lucide-react";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
 import {
   type EnterpriseStatus,
   Enterprise,
 } from "@/services/businessService";
-// ─── Helper Components ──────────────────────────────────────────────────────
-
-function Checkbox({
-  checked,
-  indeterminate,
-  onChange,
-}: {
-  checked: boolean;
-  indeterminate?: boolean;
-  onChange?: (v: boolean) => void;
-}) {
-  return (
-    <CheckboxPrimitive.Root
-      checked={indeterminate ? "indeterminate" : checked}
-      onCheckedChange={(v) => onChange?.(v === true)}
-      className="flex h-4 w-4 appearance-none items-center justify-center rounded border border-gray-300 bg-white outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 data-[state=indeterminate]:bg-blue-600 data-[state=indeterminate]:border-blue-600"
-    >
-      <CheckboxPrimitive.Indicator>
-        {indeterminate ? (
-          <span className="block w-2 h-0.5 bg-white rounded" />
-        ) : (
-          <Check className="h-3 w-3 text-white" strokeWidth={3} />
-        )}
-      </CheckboxPrimitive.Indicator>
-    </CheckboxPrimitive.Root>
-  );
-}
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  Pagination,
+  FloatingSelectionBar,
+} from "@/components/common";
+import { useTableSelection } from "@/hooks/useTableSelection";
 
 function StatusSwitch({
   checked,
@@ -54,7 +37,7 @@ function StatusSwitch({
   );
 }
 
-// ─── Props ──────────────────────────────────────────────────────────────────
+// 🟢 Props 🟢
 
 interface BusinessTableProps {
   data: Enterprise[];
@@ -75,7 +58,7 @@ interface BusinessTableProps {
   resetSelection?: number;
 }
 
-// ─── Component ──────────────────────────────────────────────────────────────
+// 🟢 Component 🟢
 
 export default function BusinessTable({
   data,
@@ -92,14 +75,54 @@ export default function BusinessTable({
   onDeleteSelected,
   resetSelection,
 }: BusinessTableProps) {
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const {
+    selectedIds,
+    selectedIdsSet,
+    toggleSelection,
+    selectAll,
+    clearSelection,
+    isAllSelected,
+    isPartiallySelected,
+  } = useTableSelection<Enterprise>(data, (e) => e.id);
+
+  useEffect(() => {
+    if (resetSelection) {
+      clearSelection();
+    }
+  }, [resetSelection, clearSelection]);
 
   // Data for filters
   const [businessTypes, setBusinessTypes] = useState<{ id: number; name: string; code: string }[]>([]);
   const [businessFields, setBusinessFields] = useState<{ id: number; name: string; code: string }[]>([]);
 
-  // Fetch filter options
-  React.useEffect(() => {
+  // Filter states
+  const [filterName, setFilterName] = useState("");
+  const [filterTaxCode, setFilterTaxCode] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterField, setFilterField] = useState("");
+  const [filterAddress, setFilterAddress] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      const matchName = item.name.toLowerCase().includes(filterName.toLowerCase());
+      const matchTax = item.taxCode.toLowerCase().includes(filterTaxCode.toLowerCase());
+      const matchAddress = (item.registeredAddress || "").toLowerCase().includes(filterAddress.toLowerCase());
+
+      let matchType = true;
+      if (filterType) matchType = item.businessType?.code === filterType;
+
+      let matchField = true;
+      if (filterField) matchField = item.businessField?.code === filterField;
+
+      let matchStatus = true;
+      if (filterStatus) matchStatus = item.status.toLowerCase() === filterStatus.toLowerCase();
+
+      return matchName && matchTax && matchType && matchField && matchAddress && matchStatus;
+    });
+  }, [data, filterName, filterTaxCode, filterType, filterField, filterAddress, filterStatus]);
+
+  useEffect(() => {
     import("@/services/businessTypeService").then(({ businessTypeService }) => {
       businessTypeService.getBusinessTypes().then(setBusinessTypes).catch(console.error);
     });
@@ -108,117 +131,62 @@ export default function BusinessTable({
     });
   }, []);
 
-  // Filter states
-  const [filterName, setFilterName] = useState("");
-  const [filterTax, setFilterTax] = useState("");
-  const [filterType, setFilterType] = useState("");
-  const [filterField, setFilterField] = useState("");
-  const [filterWard, setFilterWard] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-
-  // ── Selection ──────────────────────────────────────────────────────────
-  const filteredData = data.filter((item) => {
-    const n = filterName.trim().toLowerCase();
-    const t = filterTax.trim().toLowerCase();
-    return (
-      (!n || item.name?.toLowerCase().includes(n)) &&
-      (!t || item.taxCode?.toLowerCase().includes(t)) &&
-      (!filterType || item.businessType?.code === filterType) &&
-      (!filterField || item.businessField?.code === filterField) &&
-      (!filterWard || item.registeredAddress?.toLowerCase().includes(filterWard.toLowerCase())) &&
-      (filterStatus === "" ||
-        (filterStatus === "active" && item.status === "APPROVED") ||
-        (filterStatus === "rejected" && item.status === "REJECTED") ||
-        (filterStatus === "pending" && item.status === "PENDING"))
-    );
-  });
-
-  const allSelected =
-    filteredData.length > 0 && filteredData.every((r) => selectedIds.has(r.id));
-  const someSelected =
-    filteredData.some((r) => selectedIds.has(r.id)) && !allSelected;
-
-  const toggleAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIds(new Set(filteredData.map((r) => r.id)));
-    } else {
-      setSelectedIds(new Set());
-    }
-  };
-
-  const toggleOne = (id: number, checked: boolean) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      checked ? next.add(id) : next.delete(id);
-      return next;
-    });
-  };
-
-  const selectedCount = selectedIds.size;
-
-  // Clear selection when parent signals a reset (e.g., after deletion)
-  React.useEffect(() => {
-    if (typeof resetSelection === "number") {
-      setSelectedIds(new Set());
-    }
-  }, [resetSelection]);
-
-  // ── Pagination ─────────────────────────────────────────────────────────
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
-  // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col flex-1 h-full relative">
       {/* Table */}
-      <div className="overflow-auto border border-gray-200 rounded-md flex-1">
-        <table className="w-full text-sm text-left text-gray-700">
-          {/* ── HEADER ── */}
-          <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-            <tr>
-              {/* Checkbox all */}
-              <th className="px-3 py-3 w-10 text-center">
-                <Checkbox
-                  checked={allSelected}
-                  indeterminate={someSelected}
-                  onChange={toggleAll}
-                />
-              </th>
-
-              {/* Thao tác */}
-              <th className="px-3 py-3 w-28 text-center whitespace-nowrap">
-                Thao tác
-              </th>
-
-              {/* Tên doanh nghiệp */}
-              <th className="px-3 py-3 min-w-[200px]">
-                <div className="mb-1.5 font-semibold">Tên doanh nghiệp</div>
+      <div className="flex-1 overflow-auto border border-gray-200 rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12 text-center">
                 <input
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal outline-none focus:ring-1 focus:ring-blue-500"
+                  type="checkbox"
+                  className="rounded border-gray-300 w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  checked={isAllSelected}
+                  ref={(input) => {
+                    if (input) input.indeterminate = isPartiallySelected;
+                  }}
+                  onChange={() => {
+                    if (isAllSelected) clearSelection();
+                    else selectAll();
+                  }}
+                />
+              </TableHead>
+              <TableHead className="w-[120px] text-center">Hành động</TableHead>
+              <TableHead className="min-w-[200px]">Tên doanh nghiệp</TableHead>
+              <TableHead className="min-w-[140px]">Mã số thuế</TableHead>
+              <TableHead className="min-w-[150px]">Loại hình DN</TableHead>
+              <TableHead className="min-w-[180px]">Lĩnh vực KD</TableHead>
+              <TableHead className="min-w-[200px]">Địa chỉ ĐKKD</TableHead>
+              <TableHead className="min-w-[140px] text-center">Trạng thái</TableHead>
+            </TableRow>
+            <TableRow className="bg-gray-50">
+              <TableCell className="p-2"></TableCell>
+              <TableCell className="p-2"></TableCell>
+              <TableCell className="p-2">
+                <input
+                  placeholder="Lọc tên..."
                   value={filterName}
                   onChange={(e) => setFilterName(e.target.value)}
-                  placeholder="Lọc..."
+                  className="w-full text-xs border border-gray-200 rounded px-2 py-1 outline-none focus:border-blue-400"
                 />
-              </th>
-
-              {/* Mã số thuế */}
-              <th className="px-3 py-3 min-w-[130px]">
-                <div className="mb-1.5 font-semibold">Mã số thuế</div>
+              </TableCell>
+              <TableCell className="p-2">
                 <input
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal outline-none focus:ring-1 focus:ring-blue-500"
-                  value={filterTax}
-                  onChange={(e) => setFilterTax(e.target.value)}
-                  placeholder="Lọc..."
+                  placeholder="Lọc MST..."
+                  value={filterTaxCode}
+                  onChange={(e) => setFilterTaxCode(e.target.value)}
+                  className="w-full text-xs border border-gray-200 rounded px-2 py-1 outline-none focus:border-blue-400"
                 />
-              </th>
-
-              {/* Loại hình kinh doanh */}
-              <th className="px-3 py-3 min-w-[180px]">
-                <div className="mb-1.5 font-semibold">Loại hình kinh doanh</div>
+              </TableCell>
+              <TableCell className="p-2">
                 <div className="relative">
                   <select
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal bg-white outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
+                    className="w-full text-xs border border-gray-200 rounded px-2 py-1 pr-6 outline-none focus:border-blue-400 appearance-none bg-white text-gray-600"
                   >
                     <option value="">Tất cả</option>
                     {businessTypes.map(t => (
@@ -227,16 +195,13 @@ export default function BusinessTable({
                   </select>
                   <ChevronDown className="absolute right-1.5 top-1.5 h-3 w-3 text-gray-400 pointer-events-none" />
                 </div>
-              </th>
-
-              {/* Ngành nghề */}
-              <th className="px-3 py-3 min-w-[200px]">
-                <div className="mb-1.5 font-semibold">Ngành nghề kinh doanh</div>
+              </TableCell>
+              <TableCell className="p-2">
                 <div className="relative">
                   <select
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal bg-white outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
                     value={filterField}
                     onChange={(e) => setFilterField(e.target.value)}
+                    className="w-full text-xs border border-gray-200 rounded px-2 py-1 pr-6 outline-none focus:border-blue-400 appearance-none bg-white text-gray-600"
                   >
                     <option value="">Tất cả</option>
                     {businessFields.map(f => (
@@ -245,44 +210,37 @@ export default function BusinessTable({
                   </select>
                   <ChevronDown className="absolute right-1.5 top-1.5 h-3 w-3 text-gray-400 pointer-events-none" />
                 </div>
-              </th>
-
-              {/* Phường/Xã */}
-              <th className="px-3 py-3 min-w-[140px]">
-                <div className="mb-1.5 font-semibold">Phường / Xã</div>
+              </TableCell>
+              <TableCell className="p-2">
                 <input
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal outline-none focus:ring-1 focus:ring-blue-500"
-                  value={filterWard}
-                  onChange={(e) => setFilterWard(e.target.value)}
-                  placeholder="Lọc..."
+                  placeholder="Lọc địa chỉ..."
+                  value={filterAddress}
+                  onChange={(e) => setFilterAddress(e.target.value)}
+                  className="w-full text-xs border border-gray-200 rounded px-2 py-1 outline-none focus:border-blue-400"
                 />
-              </th>
-
-              {/* Trạng thái */}
-              <th className="px-3 py-3 min-w-[120px]">
-                <div className="mb-1.5 font-semibold">Trạng thái</div>
+              </TableCell>
+              <TableCell className="p-2">
                 <div className="relative">
                   <select
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal bg-white outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full text-xs border border-gray-200 rounded px-2 py-1 pr-6 outline-none focus:border-blue-400 appearance-none bg-white text-gray-600"
                   >
                     <option value="">Tất cả</option>
-                    <option value="active">Hoạt động</option>
+                    <option value="approved">Đã duyệt</option>
                     <option value="rejected">Ngừng HĐ</option>
                     <option value="pending">Chờ duyệt</option>
                   </select>
                   <ChevronDown className="absolute right-1.5 top-1.5 h-3 w-3 text-gray-400 pointer-events-none" />
                 </div>
-              </th>
-            </tr>
-          </thead>
+              </TableCell>
+            </TableRow>
+          </TableHeader>
 
-          {/* ── BODY ── */}
-          <tbody className="divide-y divide-gray-100 bg-white">
+          <TableBody>
             {isLoading ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-gray-400">
+              <TableRow>
+                <TableCell colSpan={8} className="px-4 py-10 text-center text-gray-400">
                   <div className="flex items-center justify-center gap-2">
                     <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -290,34 +248,33 @@ export default function BusinessTable({
                     </svg>
                     Đang tải dữ liệu...
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : filteredData.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-gray-400">
+              <TableRow>
+                <TableCell colSpan={8} className="px-4 py-10 text-center text-gray-400">
                   Không có dữ liệu
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               filteredData.map((item) => {
-                const isSelected = selectedIds.has(item.id);
+                const isSelected = selectedIdsSet.has(item.id);
                 return (
-                  <tr
+                  <TableRow
                     key={item.id}
-                    className={`transition-colors hover:bg-gray-50 ${isSelected ? "bg-blue-50/60" : ""}`}
+                    className={isSelected ? "bg-blue-50/60" : ""}
                   >
-                    {/* Checkbox */}
-                    <td className="px-3 py-3 text-center align-middle">
-                      <Checkbox
+                    <TableCell className="text-center align-middle">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300 w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer"
                         checked={isSelected}
-                        onChange={(v) => toggleOne(item.id, v)}
+                        onChange={() => toggleSelection(item.id)}
                       />
-                    </td>
+                    </TableCell>
 
-                    {/* Action icons */}
-                    <td className="px-3 py-3 text-center align-middle">
+                    <TableCell className="text-center align-middle">
                       <div className="flex items-center justify-center gap-1">
-                        {/* Mắt - xem chi tiết */}
                         <button
                           onClick={() => onView(item)}
                           title="Xem chi tiết"
@@ -325,8 +282,6 @@ export default function BusinessTable({
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-
-                        {/* Bút - chỉnh sửa */}
                         <button
                           onClick={() => onEdit(item)}
                           title="Chỉnh sửa"
@@ -334,8 +289,6 @@ export default function BusinessTable({
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
-
-                        {/* Chìa khóa - đổi mật khẩu */}
                         <button
                           onClick={() => onChangePassword(item)}
                           title="Đổi mật khẩu"
@@ -344,25 +297,24 @@ export default function BusinessTable({
                           <KeyRound className="w-4 h-4" />
                         </button>
                       </div>
-                    </td>
+                    </TableCell>
 
-                    {/* Data columns */}
-                    <td className="px-3 py-3 align-middle font-medium text-gray-800 max-w-[220px] truncate">
+                    <TableCell className="font-medium text-gray-800 max-w-[220px] truncate">
                       {item.name}
-                    </td>
-                    <td className="px-3 py-3 align-middle text-gray-600">
+                    </TableCell>
+                    <TableCell className="text-gray-600">
                       {item.taxCode}
-                    </td>
-                    <td className="px-3 py-3 align-middle text-gray-600">
+                    </TableCell>
+                    <TableCell className="text-gray-600">
                       {item.businessType?.name}
-                    </td>
-                    <td className="px-3 py-3 align-middle text-gray-600 max-w-[220px] truncate">
+                    </TableCell>
+                    <TableCell className="text-gray-600 max-w-[220px] truncate">
                       {item.businessField?.name}
-                    </td>
-                    <td className="px-3 py-3 align-middle text-gray-600">
+                    </TableCell>
+                    <TableCell className="text-gray-600">
                       {item.registeredAddress}
-                    </td>
-                    <td className="px-3 py-3 align-middle">
+                    </TableCell>
+                    <TableCell className="text-center align-middle">
                       <StatusSwitch
                         checked={item.status === "APPROVED"}
                         onChange={(v) =>
@@ -372,78 +324,30 @@ export default function BusinessTable({
                           )
                         }
                       />
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      {/* ── SELECTION BAR ── */}
-      {selectedCount > 0 && (
-        <div className="flex items-center gap-3 mt-3 px-2 animate-in slide-in-from-bottom-2 duration-200">
-          <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full font-medium">
-            {selectedCount} dữ liệu được chọn
-          </span>
-          <button
-            onClick={() => onDeleteSelected(Array.from(selectedIds))}
-            className="flex items-center gap-1.5 px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-md transition shadow-sm"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            Xóa
-          </button>
-          <button
-            onClick={() => setSelectedIds(new Set())}
-            className="text-gray-400 hover:text-gray-600 p-1 rounded transition"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
+      <FloatingSelectionBar
+        selectedCount={selectedIds.length}
+        onClearSelection={clearSelection}
+        onDelete={() => onDeleteSelected(selectedIds as number[])}
+      />
 
-      {/* ── PAGINATION ── */}
-      <div className="flex items-center justify-end px-2 py-3 border-t border-gray-100 gap-4 mt-2">
-        <div className="flex items-center gap-2">
-          <select
-            value={limit}
-            onChange={(e) => onLimitChange(Number(e.target.value))}
-            className="border border-gray-300 rounded text-sm px-2 py-1 outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-          </select>
-        </div>
-
-        <span className="text-sm text-gray-600">
-          {total === 0
-            ? "0 - 0 of 0"
-            : `${(page - 1) * limit + 1} - ${Math.min(page * limit, total)} of ${total}`}
-        </span>
-
-        <div className="flex items-center gap-1">
-          <button
-            disabled={page === 1}
-            onClick={() => onPageChange(page - 1)}
-            className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent transition"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            disabled={page >= totalPages}
-            onClick={() => onPageChange(page + 1)}
-            className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent transition"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+      <Pagination
+        page={page}
+        limit={limit}
+        total={total}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        onLimitChange={onLimitChange}
+        className="border-none mt-2 px-0 py-2 bg-transparent"
+      />
     </div>
   );
 }

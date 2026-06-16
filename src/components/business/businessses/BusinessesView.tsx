@@ -15,6 +15,7 @@ import {
   businessService,
   Enterprise,
 } from "@/services/businessService";
+import { Button } from "@/components/common";
 
 export default function BusinessesView() {
   // ── Data state ─────────────────────────────────────────────────────────
@@ -112,16 +113,16 @@ export default function BusinessesView() {
     }
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────────────────────────────  // 🟢 Render 🟢
   return (
-    <div className="flex flex-col flex-1 h-full bg-white rounded-lg shadow-sm border border-gray-200">
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+    <div className="flex flex-col h-full">
+      {/* 🟢 Header 🟢 */}
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-semibold text-gray-800">
           Danh sách doanh nghiệp
         </h1>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <input
             type="file"
             ref={fileInputRef}
@@ -129,27 +130,29 @@ export default function BusinessesView() {
             accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
             className="hidden"
           />
-          <button 
+          <Button 
+            variant="outline" 
+            size="sm"
             onClick={handleImportClick}
             disabled={isImporting}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors disabled:opacity-50"
           >
-            <Upload className="w-4 h-4" />
-            {isImporting ? "Đang xử lý..." : "Thêm từ file"}
-          </button>
+            <Upload className="w-3.5 h-3.5 mr-1.5" />
+            {isImporting ? "Đang xử lý..." : "Import"}
+          </Button>
 
-          <Link
-            href="/dashboard/business/create"
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => window.location.href = "/dashboard/business/create"}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
             Thêm mới
-          </Link>
+          </Button>
         </div>
       </div>
 
-      {/* ── Table ── */}
-      <div className="flex-1 px-6 py-4 overflow-hidden flex flex-col min-h-0">
+      {/* 🟢 Table Card 🟢 */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col flex-1 overflow-hidden relative p-4">
         <BusinessTable
           data={data}
           isLoading={isLoading}
@@ -167,7 +170,7 @@ export default function BusinessesView() {
         />
       </div>
 
-      {/* ── Modals ── */}
+      {/* 🟢 Modals 🟢 */}
 
       {/* Xóa */}
       <DeleteConfirmModal

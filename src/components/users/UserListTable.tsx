@@ -8,20 +8,30 @@ import {
   Edit2,
   Eye,
   RefreshCw,
-  ChevronLeft,
-  ChevronRight,
   Download,
   Upload,
   Filter,
   Trash2,
   Key,
-  X,
 } from "lucide-react";
 import { adminUserService } from "@/services/adminUserService";
 import InitPasswordModal from "./InitPasswordModal";
 import type { User, Role } from "@/types/auth";
 import type { UserListParams } from "@/types/adminUser";
 import { toast } from "sonner";
+import { 
+  Table, 
+  TableHeader, 
+  TableBody, 
+  TableRow, 
+  TableHead, 
+  TableCell,
+  Button,
+  Pagination,
+  FloatingSelectionBar 
+} from "@/components/common";
+import { useTableSelection } from "@/hooks/useTableSelection";
+import { usePagination } from "@/hooks/usePagination";
 
 const GENDER_MAP: Record<string, string> = {
   MALE: "Nam",
@@ -49,9 +59,6 @@ export default function UserListTable() {
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [initPasswordUser, setInitPasswordUser] = useState<User | null>(null);
 
   // Filters
@@ -59,11 +66,20 @@ export default function UserListTable() {
   const [filterUsername, setFilterUsername] = useState("");
   const [filterEmail, setFilterEmail] = useState("");
   const [filterPosition, setFilterPosition] = useState("");
-
   const [filterRole, setFilterRole] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+
+  // Hooks
+  const { page, limit, total, totalPages, setPage, setLimit, setTotal } = usePagination(1, 10);
+  const { 
+    selectedIds, 
+    selectedIdsSet, 
+    toggleSelection, 
+    selectAll, 
+    clearSelection, 
+    isAllSelected, 
+    isPartiallySelected 
+  } = useTableSelection<User>(users, (u) => u.id);
 
   // Debounce search
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -89,12 +105,12 @@ export default function UserListTable() {
     return () => {
       if (searchTimeout.current) clearTimeout(searchTimeout.current);
     };
-  }, [filterFullName, filterUsername, filterEmail, filterPosition]);
+  }, [filterFullName, filterUsername, filterEmail, filterPosition, setPage]);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      setSelectedUserIds([]);
+      clearSelection();
       const params: UserListParams = {
         page,
         limit,
@@ -113,13 +129,12 @@ export default function UserListTable() {
       const result = await adminUserService.getUsers(params);
       setUsers(result.data ?? []);
       setTotal(result.total ?? 0);
-      setTotalPages(result.totalPages ?? 1);
     } catch {
       toast.error("Không thể tải danh sách người dùng");
     } finally {
       setLoading(false);
     }
-  }, [page, limit, debouncedFilters, filterRole, filterStatus]);
+  }, [page, limit, debouncedFilters, filterRole, filterStatus, clearSelection, setTotal]);
 
   useEffect(() => {
     fetchUsers();
@@ -143,6 +158,7 @@ export default function UserListTable() {
       toast.error(ex.message || "Không thể thay đổi trạng thái");
     }
   };
+
   const handleInitPassword = async (userId: number, newPassword: string) => {
     try {
       const res = await adminUserService.initPassword(userId, newPassword);
@@ -153,10 +169,13 @@ export default function UserListTable() {
   };
 
   const handleBulkDelete = async () => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.length} người dùng đã chọn?`)) {
+      return;
+    }
     try {
-      await adminUserService.bulkDeleteUsers(selectedUserIds);
+      await adminUserService.bulkDeleteUsers(selectedIds as number[]);
       toast.success("Đã xóa các người dùng được chọn thành công");
-      setSelectedUserIds([]);
+      clearSelection();
       fetchUsers();
     } catch (ex: any) {
       toast.error(ex.message || "Không thể xóa người dùng");
@@ -216,48 +235,14 @@ export default function UserListTable() {
     }
   };
 
-  const from = total === 0 ? 0 : (page - 1) * limit + 1;
-  const to = Math.min(page * limit, total);
-
   return (
     <div className="flex flex-col h-full">
-      {/* ── Header ── */}
+      {/* 🟢 Header 🟢 */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-semibold text-gray-800">
           Danh sách người dùng
         </h1>
         <div className="flex items-center gap-2">
-          {selectedUserIds.length > 0 && (
-            <div className="flex items-center bg-white rounded shadow border border-gray-100 h-[34px] overflow-hidden mr-2">
-              <div className="bg-[#2D68FE] text-white font-semibold text-sm px-3 h-full flex items-center justify-center">
-                {selectedUserIds.length}
-              </div>
-              <div className="px-3 text-sm text-gray-800 font-medium bg-white h-full flex items-center">
-                dữ liệu được chọn
-              </div>
-              <div className="h-full py-[3px] bg-white">
-                <button
-                  onClick={() => {
-                    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedUserIds.length} người dùng đã chọn?`)) {
-                      handleBulkDelete();
-                    }
-                  }}
-                  className="flex items-center gap-1.5 px-3 h-full text-xs font-medium text-white bg-[#FF0000] hover:bg-red-600 rounded transition"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Xoá
-                </button>
-              </div>
-              <div className="h-full bg-white px-1 flex items-center">
-                <button
-                  onClick={() => setSelectedUserIds([])}
-                  className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
           <input
             type="file"
             ref={fileInputRef}
@@ -265,286 +250,233 @@ export default function UserListTable() {
             accept=".xlsx, .xls"
             className="hidden"
           />
-          <button
-            onClick={handleImportClick}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 transition"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            Import Data
-          </button>
-          <button
+          <Button variant="outline" size="sm" onClick={handleImportClick}>
+            <Upload className="w-3.5 h-3.5 mr-1.5" />
+            Import
+          </Button>
+
+          <Button 
+            variant="primary" 
+            size="sm"
             onClick={() => router.push("/dashboard/users/new")}
-            className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition shadow-sm"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
             Thêm mới
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* ── Table Card ── */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col flex-1 overflow-hidden">
+      {/* 🟢 Table Card 🟢 */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col flex-1 overflow-hidden relative">
         {/* Table */}
-        <div className="overflow-x-auto flex-1">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-white">
-                <th className="w-10 px-3 py-2.5"></th>
-                <th className="w-16 px-2 py-2.5"></th>
-                {COLUMNS.map((col) => (
-                  <th
-                    key={col.key}
-                    className={`${col.width} px-3 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap`}
-                  >
-                    {col.label}
-                  </th>
-                ))}
-              </tr>
-              {/* Filter inputs per column */}
-              <tr className="border-b border-gray-100 bg-gray-50/30">
-                <td className="px-3 py-1.5">
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300"
-                    checked={users.length > 0 && selectedUserIds.length === users.length}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedUserIds(users.map((u) => u.id));
-                      } else {
-                        setSelectedUserIds([]);
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12 text-center">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 w-4 h-4 text-blue-600 focus:ring-blue-500"
+                  checked={isAllSelected}
+                  ref={(input) => {
+                    if (input) input.indeterminate = isPartiallySelected;
+                  }}
+                  onChange={() => {
+                    if (isAllSelected) clearSelection();
+                    else selectAll();
+                  }}
+                />
+              </TableHead>
+              <TableHead className="w-32 text-center">Hành động</TableHead>
+              {COLUMNS.map((col) => (
+                <TableHead key={col.key} className={col.width}>
+                  {col.label}
+                </TableHead>
+              ))}
+            </TableRow>
+            <TableRow className="bg-gray-50/50">
+              <TableCell></TableCell>
+              <TableCell></TableCell>
+              {COLUMNS.map((col) => (
+                <TableCell key={`filter-${col.key}`} className="p-2">
+                  {col.key === "role" ? (
+                    <select
+                      value={filterRole}
+                      onChange={(e) => setFilterRole(e.target.value)}
+                      className="w-full text-xs border border-gray-200 rounded px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    >
+                      <option value="">Tất cả</option>
+                      {roles.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : col.key === "isActive" ? (
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="w-full text-xs border border-gray-200 rounded px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    >
+                      <option value="">Tất cả</option>
+                      <option value="true">Đang kích hoạt</option>
+                      <option value="false">Vô hiệu hóa</option>
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder={`Lọc ${col.label.toLowerCase()}...`}
+                      value={
+                        col.key === "fullName"
+                          ? filterFullName
+                          : col.key === "username"
+                            ? filterUsername
+                            : col.key === "email"
+                              ? filterEmail
+                              : filterPosition
                       }
-                    }}
-                  />
-                </td>
-                <td className="px-2 py-1.5" />
-                {COLUMNS.map((col) => (
-                  <td key={col.key} className="px-3 py-1.5">
-                    {col.key === "role" ? (
-                      <select
-                        value={filterRole}
-                        onChange={(e) => {
-                          setFilterRole(e.target.value);
-                          setPage(1);
-                        }}
-                        className="w-full text-xs border border-gray-200 rounded px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
-                      >
-                        <option value="">Tất cả</option>
-                        {roles.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : col.key === "isActive" ? (
-                      <select
-                        value={filterStatus}
-                        onChange={(e) => {
-                          setFilterStatus(e.target.value);
-                          setPage(1);
-                        }}
-                        className="w-full text-xs border border-gray-200 rounded px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
-                      >
-                        <option value="">Tất cả</option>
-                        <option value="true">Kích hoạt</option>
-                        <option value="false">Vô hiệu</option>
-                      </select>
-                    ) : (
-                      <input
-                        value={
-                          col.key === "fullName"
-                            ? filterFullName
-                            : col.key === "username"
-                              ? filterUsername
-                              : col.key === "email"
-                                ? filterEmail
-                                : col.key === "position"
-                                  ? filterPosition
-                                  : ""
-                        }
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (col.key === "fullName") setFilterFullName(val);
-                          else if (col.key === "username") setFilterUsername(val);
-                          else if (col.key === "email") setFilterEmail(val);
-                          else if (col.key === "position") setFilterPosition(val);
-                        }}
-                        className="w-full text-xs border border-gray-200 rounded px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
-                      />
-                    )}
-                  </td>
-                ))}
-              </tr>
-            </thead>
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (col.key === "fullName") setFilterFullName(val);
+                        else if (col.key === "username") setFilterUsername(val);
+                        else if (col.key === "email") setFilterEmail(val);
+                        else if (col.key === "position") setFilterPosition(val);
+                      }}
+                      className="w-full text-xs border border-gray-200 rounded px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    />
+                  )}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHeader>
 
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan={COLUMNS.length + 2}
-                    className="py-16 text-center text-gray-400"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                      Đang tải...
-                    </div>
-                  </td>
-                </tr>
-              ) : users.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={COLUMNS.length + 2}
-                    className="py-16 text-center text-gray-400 text-sm"
-                  >
-                    Không có dữ liệu
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="border-b border-gray-50 hover:bg-blue-50/30 transition-colors group"
-                  >
-                    {/* Checkbox */}
-                    <td className="px-3 py-2.5">
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300"
-                        checked={selectedUserIds.includes(user.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedUserIds((prev) => [...prev, user.id]);
-                          } else {
-                            setSelectedUserIds((prev) => prev.filter((id) => id !== user.id));
-                          }
-                        }}
-                      />
-                    </td>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={COLUMNS.length + 2}
+                  className="py-16 text-center text-gray-400"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    Đang tải...
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : users.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={COLUMNS.length + 2}
+                  className="py-16 text-center text-gray-400 text-sm"
+                >
+                  Không có dữ liệu
+                </TableCell>
+              </TableRow>
+            ) : (
+              users.map((user) => (
+                <TableRow
+                  key={user.id}
+                  className="group"
+                >
+                  {/* Checkbox */}
+                  <TableCell className="text-center">
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300 w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      checked={selectedIdsSet.has(user.id)}
+                      onChange={() => toggleSelection(user.id)}
+                    />
+                  </TableCell>
 
-                    {/* Actions */}
-                    <td className="px-2 py-2.5">
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => setInitPasswordUser(user)}
-                          className="p-1 rounded hover:bg-yellow-100 text-yellow-600 transition"
-                          title="Khởi tạo mật khẩu"
-                        >
-                          <Key className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() =>
-                            router.push(`/dashboard/users/${user.id}`)
-                          }
-                          className="p-1 rounded hover:bg-blue-100 text-blue-600 transition"
-                          title="Chỉnh sửa"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() =>
-                            router.push(`/dashboard/users/${user.id}?view=true`)
-                          }
-                          className="p-1 rounded hover:bg-gray-100 text-gray-500 transition"
-                          title="Xem chi tiết"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-
-                    {/* fullName */}
-                    <td className="px-3 py-2.5 font-medium text-gray-800 text-sm">
-                      {user.fullName}
-                    </td>
-
-                    {/* username */}
-                    <td className="px-3 py-2.5 text-gray-600 text-sm">
-                      {user.username}
-                    </td>
-
-                    {/* email */}
-                    <td className="px-3 py-2.5 text-gray-600 text-sm">
-                      {user.email}
-                    </td>
-
-                    {/* role */}
-                    <td className="px-3 py-2.5 text-sm text-gray-600">
-                      {user.role?.name ?? "—"}
-                    </td>
-
-                    {/* position */}
-                    <td className="px-3 py-2.5 text-sm text-gray-600">
-                      {user.position ?? "—"}
-                    </td>
-
-                    {/* isActive toggle */}
-                    <td className="px-3 py-2.5">
+                  {/* Actions */}
+                  <TableCell>
+                    <div className="flex items-center justify-center gap-1">
                       <button
-                        onClick={() => handleToggleStatus(user)}
-                        className={`w-10 h-5 rounded-full relative transition-all duration-200 focus:outline-none ${user.isActive ? "bg-blue-600" : "bg-gray-300"
-                          }`}
-                        title={user.isActive ? "Đang kích hoạt" : "Vô hiệu hóa"}
+                        onClick={() => setInitPasswordUser(user)}
+                        className="p-1 rounded hover:bg-yellow-100 text-yellow-600 transition"
+                        title="Khởi tạo mật khẩu"
                       >
-                        <div
-                          className={`w-3.5 h-3.5 rounded-full bg-white shadow absolute top-0.5 transition-transform duration-200 ${user.isActive ? "translate-x-5" : "translate-x-0.5"
-                            }`}
-                        />
+                        <Key className="w-3.5 h-3.5" />
                       </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                      <button
+                        onClick={() =>
+                          router.push(`/dashboard/users/${user.id}`)
+                        }
+                        className="p-1 rounded hover:bg-blue-100 text-blue-600 transition"
+                        title="Chỉnh sửa"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          router.push(`/dashboard/users/${user.id}?view=true`)
+                        }
+                        className="p-1 rounded hover:bg-gray-100 text-gray-500 transition"
+                        title="Xem chi tiết"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="font-medium text-gray-800">
+                    {user.fullName}
+                  </TableCell>
+                  <TableCell className="text-gray-600">
+                    {user.username}
+                  </TableCell>
+                  <TableCell className="text-gray-600">
+                    {user.email}
+                  </TableCell>
+                  <TableCell className="text-gray-600">
+                    {user.role?.name ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-gray-600">
+                    {user.position ?? "—"}
+                  </TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => handleToggleStatus(user)}
+                      className={`w-10 h-5 rounded-full relative transition-all duration-200 focus:outline-none ${user.isActive ? "bg-blue-600" : "bg-gray-300"
+                        }`}
+                      title={user.isActive ? "Đang kích hoạt" : "Vô hiệu hóa"}
+                    >
+                      <div
+                        className={`w-3.5 h-3.5 rounded-full bg-white shadow absolute top-0.5 transition-transform duration-200 ${user.isActive ? "translate-x-5" : "translate-x-0.5"
+                          }`}
+                      />
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+
+        {/* 🟢 Footer / Pagination 🟢 */}
+        <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/30 shrink-0 pr-4">
+           <button
+             onClick={handleExportData}
+             className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition px-4 py-3"
+           >
+             <Download className="w-3.5 h-3.5" />
+             Export Data
+           </button>
+           <Pagination 
+             page={page} 
+             limit={limit} 
+             total={total} 
+             totalPages={totalPages} 
+             onPageChange={setPage} 
+             onLimitChange={setLimit} 
+             className="border-none bg-transparent py-2.5 px-0"
+           />
         </div>
 
-        {/* ── Footer / Pagination ── */}
-        <div className="flex items-center justify-between px-4 py-2.5 border-t border-gray-100 bg-gray-50/30 shrink-0">
-          <button
-            onClick={handleExportData}
-            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition"
-          >
-            <Download className="w-3.5 h-3.5" />
-            Export Data
-          </button>
-          <div className="flex items-center gap-3 text-xs text-gray-500">
-            <div className="flex items-center gap-1.5">
-              <span>Hiển thị</span>
-              <select
-                value={limit}
-                onChange={(e) => {
-                  setLimit(Number(e.target.value));
-                  setPage(1);
-                }}
-                className="border border-gray-200 rounded px-1.5 py-0.5 bg-white focus:outline-none text-xs"
-              >
-                {[10, 20, 50].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <span>
-              {from} - {to} / {total}
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-                className="p-0.5 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                className="p-0.5 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <FloatingSelectionBar
+          selectedCount={selectedIds.length}
+          onClearSelection={clearSelection}
+          onDelete={handleBulkDelete}
+        />
       </div>
 
       <InitPasswordModal
