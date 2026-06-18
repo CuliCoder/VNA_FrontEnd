@@ -33,8 +33,8 @@ export interface ReviewData {
   wardId?: number;
   addressRegistration?: string;
 
-  provinceIdActivity?: number;
-  wardIdActivity?: number;
+  operatingProvinceId?: number;
+  operatingWardId?: number;
   operatingAddress?: string;
 
   foreignName?: string;
@@ -53,7 +53,7 @@ export interface ReviewData {
 
 const businessSchema = z.object({
   name: z.string().nonempty("Tên doanh nghiệp là bắt buộc"),
-  taxCode: z.string().regex(/^\d{10}$/, "Mã số thuế phải có 10 chữ số"),
+  taxCode: z.string().regex(/^\d{10,15}$/, "Mã số thuế phải có từ 10 đến 15 chữ số"),
 
   licenseNumber: z.string().optional(),
   licenseDate: z.string().optional(),
@@ -92,7 +92,7 @@ interface BusinessFormProps {
   // Accept either UI form partials or enterprise partials from API
   initialData?: any; // accept either form partials or enterprise partials
 
-  onNext?: (data: ReviewData) => void;
+  onNext?: (data: ReviewData) => void | Promise<void>;
 
   onSubmitDirect?: (data: BusinessProfileRequest) => Promise<void>;
 
@@ -238,8 +238,8 @@ export default function BusinessForm({
 
       addressRegistration: initialData.registeredAddress || "",
 
-      provinceOperation: String(initialData.provinceIdActivity || ""),
-      wardOperation: String(initialData.wardIdActivity || ""),
+      provinceOperation: String(initialData.operatingProvinceId || ""),
+      wardOperation: String(initialData.operatingWardId || ""),
       addressOperation: initialData.operatingAddress || "",
 
       // accept both `englishName` and `foreignName` variants
@@ -328,7 +328,7 @@ export default function BusinessForm({
 
         const stepPayload = mapFormToReviewData(data, docs);
 
-        onNext(stepPayload);
+        await onNext(stepPayload);
         return;
       }
 
@@ -403,7 +403,7 @@ export default function BusinessForm({
               <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10">Mã số thuế <span className="text-red-500">*</span></div>
               <input
                 {...register("taxCode", {
-                  required: "Mã số thuế là số bắt buộc có 10 chữ số",
+                  required: "Mã số thuế là bắt buộc",
                 })}
                 placeholder="Mã số thuế"
                 disabled={mode === "edit"}
@@ -597,6 +597,7 @@ export default function BusinessForm({
                 <button
                   type="button"
                   onClick={onCancel}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 transition border border-gray-200 rounded-md hover:bg-gray-50"
                 >
                   Huỷ bỏ
                 </button>

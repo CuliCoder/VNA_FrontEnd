@@ -30,8 +30,8 @@ export interface EditReviewData {
     wardId?: number;
     registeredAddress?: string;
 
-    provinceIdActivity?: number;
-    wardIdActivity?: number;
+    operatingProvinceId?: number;
+    operatingWardId?: number;
     operatingAddress?: string;
 
     englishName?: string;
@@ -139,11 +139,11 @@ export default function EditBusinessReview({
                     }
                 }
 
-                if (data.provinceIdActivity) {
+                if (data.operatingProvinceId) {
                     const provinces = await locationService.getProvinces();
 
                     const province = provinces.find(
-                        (p) => Number(p.code) === Number(data.provinceIdActivity)
+                        (p) => Number(p.code) === Number(data.operatingProvinceId)
                     );
 
                     if (province) {
@@ -154,7 +154,7 @@ export default function EditBusinessReview({
                         );
 
                         const ward = wards.find(
-                            (w) => Number(w.code) === Number(data.wardIdActivity)
+                            (w) => Number(w.code) === Number(data.operatingWardId)
                         );
 
                         if (ward) setOpWardName(ward.name);

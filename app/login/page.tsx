@@ -8,11 +8,14 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import { toast } from "sonner";
 import { authService } from "@/services/authService"
 import { useToast } from "@/hooks/use-toast";
+import { Modal } from "@/components/common/Modal";
+import CreateBusinessFlow from "@/components/business/businessses/CreateBusinessFlow";
 
 export default function LoginPage() {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [rememberMe, setRememberMe] = React.useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
 
   const { login, isLoading } = useAuth();
 
@@ -94,11 +97,27 @@ export default function LoginPage() {
 
         <button
           type="button"
+          onClick={() => setIsCreateModalOpen(true)}
           className="w-full h-10 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           Đăng ký tài khoản doanh nghiệp
         </button>
       </form>
+
+      <Modal
+        open={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Đăng ký tài khoản doanh nghiệp"
+        size="xl"
+      >
+        <div className="max-h-[80vh] overflow-y-auto px-1 py-2">
+          <CreateBusinessFlow
+            isPublic={true}
+            onSuccess={() => setIsCreateModalOpen(false)}
+            onCancel={() => setIsCreateModalOpen(false)}
+          />
+        </div>
+      </Modal>
     </AuthLayout>
   );
 }

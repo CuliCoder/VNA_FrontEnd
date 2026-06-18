@@ -27,8 +27,8 @@ export interface BusinessProfileRequest {
   wardId?: number;
   registeredAddress?: string;
 
-  provinceIdActivity?: number;
-  wardIdActivity?: number;
+  operatingProvinceId?: number;
+  operatingWardId?: number;
   operatingAddress?: string;
 
   englishName?: string;
@@ -66,9 +66,8 @@ export interface Enterprise {
 
   provinceId: number | null;
   wardId: number | null;
-
-  provinceIdActivity: number | null;
-  wardIdActivity: number | null;
+  operatingProvinceId: number | null;
+  operatingWardId: number | null;
 
   registeredAddress: string | null;
   operatingAddress: string | null;
@@ -257,13 +256,15 @@ export const businessService = {
 
   uploadFile: async (
     file: File,
-    taxCode?: string
+    taxCode?: string,
+    isRegisterFlow: boolean = false
   ): Promise<{ url: string; fileName: string; mimeType: string; fileSize: number; documentName?: string; documentType?: string; filePath?: string }> => {
     const formData = new FormData();
     formData.append("file", file);
 
+    const endpoint = isRegisterFlow ? API_ENDPOINTS.AUTH.REGISTER_ENTERPRISE_UPLOAD : API_ENDPOINTS.ENTERPRISES.UPLOAD;
     const res = await apiClient.post<ApiResponse<{ url: string; fileName: string; mimeType: string; fileSize: number }>>(
-      API_ENDPOINTS.ENTERPRISES.UPLOAD,
+      endpoint,
       formData,
       {
         params: taxCode ? { taxCode } : undefined,
@@ -281,17 +282,19 @@ export const businessService = {
   /** Upload nhiều tài liệu (gọi lần lượt uploadFile) */
   uploadFiles: async (
     files: File[],
-    taxCode?: string
+    taxCode?: string,
+    isRegisterFlow: boolean = false
   ): Promise<any[]> => {
     return await Promise.all(
-      files.map((file) => businessService.uploadFile(file, taxCode))
+      files.map((file) => businessService.uploadFile(file, taxCode, isRegisterFlow))
     );
   },
 
   /** Xóa file tài liệu */
-  deleteFile: async (filePath: string): Promise<void> => {
+  deleteFile: async (filePath: string, isRegisterFlow: boolean = false): Promise<void> => {
+    const endpoint = isRegisterFlow ? API_ENDPOINTS.AUTH.REGISTER_ENTERPRISE_UPLOAD : API_ENDPOINTS.ENTERPRISES.UPLOAD;
     await apiClient.delete<ApiResponse<void>>(
-      API_ENDPOINTS.ENTERPRISES.UPLOAD,
+      endpoint,
       { params: { filePath } }
     );
   },
@@ -309,5 +312,19 @@ export const businessService = {
         },
       }
     );
+  },
+
+  /** Public Registration Flow */
+  registerEnterpriseRequest: async (payload: BusinessProfileRequest): Promise<void> => {
+    await apiClient.post(API_ENDPOINTS.AUTH.REGISTER_ENTERPRISE_REQUEST, payload);
+  },
+
+  registerEnterpriseVerify: async (taxCode: string, otp: string): Promise<void> => {
+    await apiClient.post(API_ENDPOINTS.AUTH.REGISTER_ENTERPRISE_VERIFY, { taxCode, otp });
+  },
+
+  registerEnterpriseConfirm: async (taxCode: string): Promise<CreateEnterpriseResponse> => {
+    const res = await apiClient.post<CreateEnterpriseResponse>(API_ENDPOINTS.AUTH.REGISTER_ENTERPRISE_CONFIRM, { taxCode });
+    return res.data;
   },
 };
