@@ -22,8 +22,8 @@ const businessSchema = z.object({
   englishName: z.string().optional(),
   email: z.string().min(1, "Email là bắt buộc").email("Email không hợp lệ"),
   officePhone: z.string().optional(),
-  provinceIdActivity: z.number().optional(),
-  wardIdActivity: z.number().optional(),
+  operatingProvinceId: z.number().optional(),
+  operatingWardId: z.number().optional(),
   operatingAddress: z.string().optional(),
   representativeName: z.string().optional(),
   representativePhone: z.string().optional(),
@@ -117,8 +117,8 @@ export default function BusinessForm() {
         englishName: data.englishName,
         email: data.email,
         officePhone: data.officePhone,
-        provinceIdActivity: data.provinceIdActivity,
-        wardIdActivity: data.wardIdActivity,
+        operatingProvinceId: data.operatingProvinceId,
+        operatingWardId: data.operatingWardId,
         operatingAddress: data.operatingAddress,
         representativeName: data.representativeName,
         representativePhone: data.representativePhone,
@@ -357,8 +357,8 @@ export default function BusinessForm() {
                 onChange={(val) => {
                   const code = Number(val) || undefined;
                   handleProvinceActChange(code ?? "");
-                  setValue("provinceIdActivity", code);
-                  setValue("wardIdActivity", undefined);
+                  setValue("operatingProvinceId", code);
+                  setValue("operatingWardId", undefined);
                 }}
               />
             </div>
@@ -373,7 +373,7 @@ export default function BusinessForm() {
                 onChange={(val) => {
                   const code = Number(val) || undefined;
                   setSelectedWardAct(code ?? "");
-                  setValue("wardIdActivity", code);
+                  setValue("operatingWardId", code);
                 }}
               />
             </div>

@@ -29,12 +29,12 @@ export interface ReviewData {
   addressRegistration?: string;
 
   provinceOperation?: number;
-  provinceIdActivity?: number;
+  operatingProvinceId?: number;
   provinceOperationName?: string;
 
   wardId?: number;
   wardOperation?: number;
-  wardIdActivity?: number;
+  operatingWardId?: number;
   wardOperationName?: string;
 
   addressOperation?: string;
@@ -127,8 +127,8 @@ export default function BusinessReview({
           }
         }
         // operation / activity province/ward may be named differently in different data shapes
-        const opProvinceId = data.provinceIdActivity ?? data.provinceOperation;
-        const opWardId = data.wardIdActivity ?? data.wardOperation;
+        const opProvinceId = data.operatingProvinceId ?? data.provinceOperation;
+        const opWardId = data.operatingWardId ?? data.wardOperation;
         if (opProvinceId) {
           const provinces = await locationService.getProvinces();
           const p = provinces.find((x) => Number(x.code) === Number(opProvinceId));
@@ -174,9 +174,9 @@ export default function BusinessReview({
   const opAddress = [
     data.operatingAddress || data.addressOperation,
     opWardName || (data.wardOperationName
-      ? `${data.wardOperationName} ${data.wardIdActivity ?? data.wardOperation ? `(${data.wardIdActivity ?? data.wardOperation})` : ""}`
-      : (data.wardIdActivity ?? data.wardOperation)
-      ? String(data.wardIdActivity ?? data.wardOperation)
+      ? `${data.wardOperationName} ${data.operatingWardId ?? data.wardOperation ? `(${data.operatingWardId ?? data.wardOperation})` : ""}`
+      : (data.operatingWardId ?? data.wardOperation)
+      ? String(data.operatingWardId ?? data.wardOperation)
       : undefined),
     opProvinceName || (data.provinceOperationName
       ? `${data.provinceOperationName} ${data.provinceOperation ? `(${data.provinceOperation})` : ""}`

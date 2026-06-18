@@ -20,11 +20,11 @@ export function mapFormToBusinessRequest(
     wardId: Number(data.wardRegistration),
     registeredAddress: data.addressRegistration || "",
 
-    provinceIdActivity: data.provinceOperation
+    operatingProvinceId: data.provinceOperation
       ? Number(data.provinceOperation)
       : undefined,
 
-    wardIdActivity: data.wardOperation
+    operatingWardId: data.wardOperation
       ? Number(data.wardOperation)
       : undefined,
 
@@ -60,11 +60,11 @@ export function mapFormToReviewData(
     wardId: Number(data.wardRegistration),
     addressRegistration: data.addressRegistration || "",
 
-    provinceIdActivity: data.provinceOperation
+    operatingProvinceId: data.provinceOperation
       ? Number(data.provinceOperation)
       : undefined,
 
-    wardIdActivity: data.wardOperation ? Number(data.wardOperation) : undefined,
+    operatingWardId: data.wardOperation ? Number(data.wardOperation) : undefined,
 
     operatingAddress: data.addressOperation || "",
 
@@ -98,8 +98,8 @@ export function mapReviewToBusinessRequest(
     wardId: data.wardId || 0,
     registeredAddress: data.addressRegistration || "",
 
-    provinceIdActivity: data.provinceIdActivity,
-    wardIdActivity: data.wardIdActivity,
+    operatingProvinceId: data.operatingProvinceId,
+    operatingWardId: data.operatingWardId,
     operatingAddress: data.operatingAddress || "",
 
     englishName: data.foreignName || undefined,
