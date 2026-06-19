@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { adminUserService } from "@/services/adminUserService";
 import type { User, Role } from "@/types/auth";
-import type { UserListParams } from "@/types/adminUser";
+import type { UserListParams, ImportPreviewResult } from "@/types/adminUser";
 import { toast } from "sonner";
 import { 
   Table, 
@@ -31,6 +31,7 @@ import {
   DeleteConfirmModal,
   InitPasswordModal
 } from "@/components/common";
+import UserImportPreviewModal from "./UserImportPreviewModal";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { usePagination } from "@/hooks/usePagination";
 
@@ -63,6 +64,8 @@ export default function UserListTable() {
   const [initPasswordUser, setInitPasswordUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [previewData, setPreviewData] = useState<ImportPreviewResult | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   // Filters
   const [filterFullName, setFilterFullName] = useState("");
@@ -231,16 +234,40 @@ export default function UserListTable() {
     if (!file) return;
 
     try {
-      toast.info("Đang nhập dữ liệu...");
-      await adminUserService.importUsers(file);
-      toast.success("Nhập dữ liệu thành công");
-      fetchUsers();
+      toast.info("Đang đọc file...");
+      const data = await adminUserService.importPreview(file);
+      setPreviewData(data);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Lỗi khi nhập dữ liệu");
+      toast.error(error.response?.data?.message || "Lỗi khi đọc file");
     } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+    }
+  };
+
+  const handleConfirmImport = async () => {
+    if (!previewData) return;
+    
+    const validUsers = previewData.results
+      .filter((r) => r.isValid)
+      .map((r) => r.data);
+
+    if (validUsers.length === 0) {
+      toast.error("Không có dữ liệu hợp lệ để import");
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      await adminUserService.importConfirm(validUsers);
+      toast.success(`Đã import thành công ${validUsers.length} người dùng`);
+      setPreviewData(null);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Lỗi khi import dữ liệu");
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -501,6 +528,15 @@ export default function UserListTable() {
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={handleBulkDelete}
         isLoading={isDeleting}
+      />
+
+      <UserImportPreviewModal
+        open={!!previewData}
+        previewData={previewData}
+        roles={roles}
+        onClose={() => setPreviewData(null)}
+        onConfirm={handleConfirmImport}
+        isLoading={isImporting}
       />
     </div>
   );

@@ -83,7 +83,7 @@ export default function ResetPasswordForm({ email }: { email: string }) {
 
       <PasswordInput
         label="Nhập mật khẩu mới"
-        placeholder="••••••••••••"
+        placeholder="Nhập mật khẩu mới"
         id="newPassword"
         value={newPassword}
         required
@@ -94,7 +94,7 @@ export default function ResetPasswordForm({ email }: { email: string }) {
 
       <PasswordInput
         label="Xác nhận mật khẩu mới"
-        placeholder="••••••••••••"
+        placeholder="Xác nhận mật khẩu mới"
         id="confirmNewPassword"
         value={confirmNewPassword}
         required

@@ -53,7 +53,7 @@ export default function ForgotPasswordForm({
 
       <InputField
         label="Email"
-        placeholder="nguyenvana@gmail.com"
+        placeholder="Nhập email đã đăng ký tài khoản"
         id="email"
         type="email"
         value={email}

@@ -44,6 +44,8 @@ export const API_ENDPOINTS = {
     BULK_DELETE: "/users/bulk-delete",
     EXPORT: "/users/export",
     IMPORT: "/users/import",
+    IMPORT_PREVIEW: "/users/import-preview",
+    IMPORT_CONFIRM: "/users/import-confirm",
   },
   ROLES: {
     LIST: "/roles",
