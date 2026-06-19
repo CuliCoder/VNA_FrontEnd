@@ -49,3 +49,17 @@ export interface UpdateUserRequest {
   isActive?: boolean;
   avatarUrl?: string | null;
 }
+
+export interface ImportPreviewRow {
+  rowNumber: number;
+  isValid: boolean;
+  errors: string[];
+  data: any;
+}
+
+export interface ImportPreviewResult {
+  totalRows: number;
+  validCount: number;
+  invalidCount: number;
+  results: ImportPreviewRow[];
+}

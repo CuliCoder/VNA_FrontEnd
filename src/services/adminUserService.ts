@@ -7,6 +7,7 @@ import type {
   PaginatedUsers,
   CreateUserRequest,
   UpdateUserRequest,
+  ImportPreviewResult,
 } from "@/types/adminUser";
 
 export const adminUserService = {
@@ -121,4 +122,23 @@ export const adminUserService = {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
-};  
+
+  /** Xem trước dữ liệu import từ file Excel */
+  importPreview: async (file: File): Promise<ImportPreviewResult> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const { data } = await apiClient.post<ImportPreviewResult>(
+      API_ENDPOINTS.ADMIN_USERS.IMPORT_PREVIEW,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+    return data;
+  },
+
+  /** Xác nhận import người dùng vào hệ thống */
+  importConfirm: async (users: any[]): Promise<void> => {
+    await apiClient.post(API_ENDPOINTS.ADMIN_USERS.IMPORT_CONFIRM, { users });
+  },
+};

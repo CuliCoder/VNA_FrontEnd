@@ -55,7 +55,7 @@ export default function LoginPage() {
 
         <InputField
           label="Tên tài khoản"
-          placeholder="nguyenvanb.stttt"
+          placeholder="Nhập tên tài khoản"
           id="username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -63,7 +63,7 @@ export default function LoginPage() {
 
         <PasswordInput
           label="Mật khẩu"
-          placeholder="••••••••••••"
+          placeholder="Nhập mật khẩu"
           id="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
