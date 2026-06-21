@@ -327,4 +327,25 @@ export const businessService = {
     const res = await apiClient.post<CreateEnterpriseResponse>(API_ENDPOINTS.AUTH.REGISTER_ENTERPRISE_CONFIRM, { taxCode });
     return res.data;
   },
+
+  /** Enterprise Email Change Flow (dành cho role ENTERPRISE) */
+  requestEnterpriseEmailChange: async (): Promise<void> => {
+    await apiClient.post(API_ENDPOINTS.USERS.EMAIL_CHANGE_REQUEST);
+  },
+
+  verifyEnterpriseEmailChangeOtp: async (otp: string): Promise<{ verificationToken: string }> => {
+    const { data } = await apiClient.post<{ verificationToken: string }>(
+      API_ENDPOINTS.USERS.EMAIL_CHANGE_VERIFY,
+      { otp }
+    );
+    return data;
+  },
+
+  updateEnterpriseEmail: async (newEmail: string, verificationToken: string): Promise<{ user: any }> => {
+    const { data } = await apiClient.post<{ user: any }>(
+      API_ENDPOINTS.USERS.EMAIL_CHANGE_UPDATE,
+      { newEmail, verificationToken }
+    );
+    return data;
+  },
 };

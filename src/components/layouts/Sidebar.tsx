@@ -15,12 +15,13 @@ import { SIDEBAR_MENUS, RoleCode, MenuItem } from "@/constants/menus";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { changePasswordEvents } from "@/hooks/useModal";
+import Image from "next/image";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const userRole = (user?.role?.code || "VIEWER") as RoleCode;
-  
+
   // Extract permissions from user object
   const userPermissions = user?.role?.permissions?.map((p: any) => p.code) || [];
 
@@ -65,11 +66,16 @@ export default function Sidebar() {
       )}
     >
       {/* ── Header / Logo ───────────────────────────────────────────── */}
-      <div className="flex items-center gap-2.5 px-3 py-3 border-b border-white/10 shrink-0 min-h-[60px]">
-        {/* Emblem */}
-        <div className="w-9 h-9 rounded-full bg-red-600 flex items-center justify-center font-bold text-yellow-300 border border-yellow-400 text-base shrink-0 shadow-sm">
-          ★
-        </div>
+      <div
+        className={`flex items-center border-b border-white/10 min-h-[60px] px-3 py-3 ${collapsed ? "justify-center" : "gap-2.5"
+          }`}
+      >
+        <Image
+          src="/Emblem_of_Vietnam.svg.png"
+          alt="Vietnam Emblem"
+          width={40}
+          height={40}
+        />
 
         {!collapsed && (
           <span className="font-semibold text-[11px] leading-tight flex-1 truncate">
@@ -80,10 +86,10 @@ export default function Sidebar() {
         {/* Hamburger */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto p-1 rounded hover:bg-white/10 transition shrink-0"
+          className="ml-auto p-1 rounded hover:bg-white/10 transition shrink-0 "
           title={collapsed ? "Mở rộng" : "Thu gọn"}
         >
-          <Menu className="w-4 h-4" />
+          <Menu className="w-5 h-5" />
         </button>
       </div>
 
@@ -135,7 +141,7 @@ export default function Sidebar() {
                           .map((child) => {
                             const isActive = child.url
                               ? pathname === child.url ||
-                                pathname.startsWith(child.url)
+                              pathname.startsWith(child.url)
                               : false;
                             return (
                               <li key={child.title}>

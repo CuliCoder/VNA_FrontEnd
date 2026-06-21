@@ -98,6 +98,12 @@ interface BusinessFormProps {
 
   onCancel?: () => void;
   formId?: string;
+
+  /** Nếu true: field email bị khoá (không được sửa) — dành cho role ADMIN */
+  emailReadonly?: boolean;
+
+  /** Nếu được truyền: hiện nút "Thay đổi" cạnh email — dành cho role ENTERPRISE */
+  onChangeEmail?: () => void;
 }
 
 interface FixedFileItem {
@@ -121,6 +127,8 @@ export default function BusinessForm({
   onSubmitDirect,
   onCancel,
   formId = "business-form",
+  emailReadonly = false,
+  onChangeEmail,
 }: BusinessFormProps) {
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
@@ -377,7 +385,7 @@ export default function BusinessForm({
     "w-full px-3 py-2 border border-gray-300 rounded-md text-sm outline-none focus:ring-1 focus:ring-blue-500 bg-white";
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="w-full max-w-screen-2xl bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <form id={formId} onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-8">
         {saveError && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2.5 rounded-lg flex justify-between">
@@ -487,9 +495,25 @@ export default function BusinessForm({
             </div>
             <div className="space-y-1.5 relative">
               <div className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 font-medium z-10">Email <span className="text-red-500">*</span></div>
-              <input {...register("email", {
-                required: "Email là bắt buộc",
-              })} placeholder="Email" className={fc(!!errors.email) + " pt-3"} />
+              <div className="flex gap-2 items-center">
+                <input
+                  {...register("email", {
+                    required: "Email là bắt buộc",
+                  })}
+                  placeholder="Email"
+                  disabled={emailReadonly}
+                  className={`${fc(!!errors.email)} pt-3 flex-1 ${emailReadonly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                />
+                {onChangeEmail && (
+                  <button
+                    type="button"
+                    onClick={onChangeEmail}
+                    className="shrink-0 px-3 py-2 text-xs font-medium text-blue-600 border border-blue-300 rounded-md hover:bg-blue-50 transition whitespace-nowrap"
+                  >
+                    Thay đổi
+                  </button>
+                )}
+              </div>
               {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
             </div>
             <div className="space-y-1.5">

@@ -356,7 +356,7 @@ export default function CreateBusinessFlow({ isPublic = false, onSuccess, onCanc
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-5">
+    <div className="max-w-7xl mx-auto space-y-5">
       {/* Step Indicator */}
       <StepIndicator currentStep={step} />
 

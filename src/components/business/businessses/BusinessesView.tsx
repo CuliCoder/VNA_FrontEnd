@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import BusinessTable from "./BusinessTable";
-import EditBusinessModal from "./EditBusinessModal";
 import { ViewDetailModal } from "./BusinessesModal";
 import {
   businessService,
@@ -18,6 +18,8 @@ import {
 } from "@/components/common";
 
 export default function BusinessesView() {
+  const router = useRouter();
+
   // ── Data state ─────────────────────────────────────────────────────────
   const [data, setData] = useState<Enterprise[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +31,6 @@ export default function BusinessesView() {
 
   // ── Modal state ────────────────────────────────────────────────────────
   const [viewTarget, setViewTarget] = useState<Enterprise | null>(null);
-  const [editTarget, setEditTarget] = useState<Enterprise | null>(null);
   const [pwdTarget, setPwdTarget] = useState<Enterprise | null>(null);
   const [deleteIds, setDeleteIds] = useState<number[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -163,7 +164,7 @@ export default function BusinessesView() {
           onLimitChange={setLimit}
           onStatusChange={handleStatusChange}
           onView={(item) => setViewTarget(item)}
-          onEdit={(item) => setEditTarget(item)}
+          onEdit={(item) => router.push(`/dashboard/business/businesses/${item.id}/edit`)}
           onChangePassword={(item) => setPwdTarget(item)}
           onDeleteSelected={handleDeleteSelected}
           resetSelection={resetSelectionCounter}
@@ -186,17 +187,6 @@ export default function BusinessesView() {
         open={viewTarget !== null}
         enterprise={viewTarget}
         onClose={() => setViewTarget(null)}
-      />
-
-      {/* Chỉnh sửa */}
-      <EditBusinessModal
-        open={editTarget !== null}
-        enterprise={editTarget}
-        onClose={() => setEditTarget(null)}
-        onSuccess={() => {
-          setEditTarget(null);
-          fetchData();
-        }}
       />
 
       {/* Đổi mật khẩu */}
