@@ -7,6 +7,7 @@ import {
   type EnterpriseStatus,
   Enterprise,
 } from "@/services/businessService";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import {
   Table,
   TableHeader,
@@ -182,34 +183,26 @@ export default function BusinessTable({
                 />
               </TableCell>
               <TableCell className="p-2">
-                <div className="relative">
-                  <select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="w-full text-xs border border-gray-200 rounded px-2 py-1 pr-6 outline-none focus:border-blue-400 appearance-none bg-white text-gray-600"
-                  >
-                    <option value="">Tất cả</option>
-                    {businessTypes.map(t => (
-                      <option key={t.id} value={t.code}>{t.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-1.5 top-1.5 h-3 w-3 text-gray-400 pointer-events-none" />
-                </div>
+                <SearchableSelect
+                  value={filterType}
+                  placeholder="Tất cả"
+                  options={[
+                    { value: "", label: "Tất cả" },
+                    ...businessTypes.map((t) => ({ value: t.code, label: t.name })),
+                  ]}
+                  onChange={(val) => setFilterType(String(val))}
+                />
               </TableCell>
               <TableCell className="p-2">
-                <div className="relative">
-                  <select
-                    value={filterField}
-                    onChange={(e) => setFilterField(e.target.value)}
-                    className="w-full text-xs border border-gray-200 rounded px-2 py-1 pr-6 outline-none focus:border-blue-400 appearance-none bg-white text-gray-600"
-                  >
-                    <option value="">Tất cả</option>
-                    {businessFields.map(f => (
-                      <option key={f.id} value={f.code}>{f.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-1.5 top-1.5 h-3 w-3 text-gray-400 pointer-events-none" />
-                </div>
+                <SearchableSelect
+                  value={filterField}
+                  placeholder="Tất cả"
+                  options={[
+                    { value: "", label: "Tất cả" },
+                    ...businessFields.map((f) => ({ value: f.code, label: f.name })),
+                  ]}
+                  onChange={(val) => setFilterField(String(val))}
+                />
               </TableCell>
               <TableCell className="p-2">
                 <input

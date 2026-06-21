@@ -88,7 +88,9 @@ export default function EditBusinessReview({
 
         onBack();
     };
+    const [businessTypeCode, setBusinessTypeCode] = useState<string>("");
     const [businessTypeName, setBusinessTypeName] = useState<string>("");
+    const [businessFieldCode, setBusinessFieldCode] = useState<string>("");
     const [businessFieldName, setBusinessFieldName] = useState<string>("");
     const [provinceName, setProvinceName] = useState<string>("");
     const [wardName, setWardName] = useState<string>("");
@@ -105,7 +107,10 @@ export default function EditBusinessReview({
                         (t) => Number(t.id) === Number(data.businessTypeId)
                     );
 
-                    if (type) setBusinessTypeName(type.name);
+                    if (type) {
+                        setBusinessTypeCode(type.code);
+                        setBusinessTypeName(type.name);
+                    }
                 }
 
                 if (data.businessFieldId) {
@@ -114,7 +119,10 @@ export default function EditBusinessReview({
                         (f) => Number(f.id) === Number(data.businessFieldId)
                     );
 
-                    if (field) setBusinessFieldName(field.name);
+                    if (field) {
+                        setBusinessFieldCode(field.code);
+                        setBusinessFieldName(field.name);
+                    }
                 }
 
                 if (data.provinceId) {
@@ -204,8 +212,22 @@ export default function EditBusinessReview({
                 />
                 <InfoRow label="Email" value={data.email} />
                 <InfoRow label="Số điện thoại" value={data.officePhone} />
-                <InfoRow label="Loại hình kinh doanh" value={businessTypeName} />
-                <InfoRow label="Ngành nghề kinh doanh" value={businessFieldName} />
+                <InfoRow
+                    label="Loại hình kinh doanh"
+                    value={
+                        (businessTypeCode || businessTypeName)
+                            ? `${businessTypeCode}${businessTypeName ? ` - ${businessTypeName}` : ""}`
+                            : "—"
+                    }
+                />
+                <InfoRow
+                    label="Ngành nghề kinh doanh"
+                    value={
+                        (businessFieldCode || businessFieldName)
+                            ? `${businessFieldCode}${businessFieldName ? ` - ${businessFieldName}` : ""}`
+                            : "—"
+                    }
+                />
                 <InfoRow
                     label="Địa chỉ đăng ký GPKD"
                     value={regAddress || "—"}

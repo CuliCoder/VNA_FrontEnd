@@ -94,7 +94,9 @@ export default function BusinessReview({
   isLoading,
   mode = "create",
 }: BusinessReviewProps) {
+  const [businessTypeCode, setBusinessTypeCode] = useState<string>("");
   const [businessTypeName, setBusinessTypeName] = useState<string>("");
+  const [businessFieldCode, setBusinessFieldCode] = useState<string>("");
   const [businessFieldName, setBusinessFieldName] = useState<string>("");
   const [provinceName, setProvinceName] = useState<string>("");
   const [wardName, setWardName] = useState<string>("");
@@ -107,13 +109,19 @@ export default function BusinessReview({
         if (data.businessTypeId) {
           const types = await businessTypeService.getBusinessTypes();
           const t = types.find((x) => Number(x.id) === Number(data.businessTypeId));
-          if (t) setBusinessTypeName(t.name);
+          if (t) {
+            setBusinessTypeCode(t.code);
+            setBusinessTypeName(t.name);
+          }
         }
 
         if (data.businessFieldId) {
           const fields = await businessFieldService.getBusinessFields();
           const f = fields.find((x) => Number(x.id) === Number(data.businessFieldId));
-          if (f) setBusinessFieldName(f.name);
+          if (f) {
+            setBusinessFieldCode(f.code);
+            setBusinessFieldName(f.name);
+          }
         }
 
         if (data.provinceId) {
@@ -233,8 +241,8 @@ export default function BusinessReview({
         <InfoRow
           label="Loại hình kinh doanh"
           value={
-            (data.businessTypeId || businessTypeName)
-              ? `${data.businessTypeId ?? ""}${businessTypeName ? ` - ${businessTypeName}` : ""}`
+            (businessTypeCode || businessTypeName)
+              ? `${businessTypeCode ?? ""}${businessTypeName ? ` - ${businessTypeName}` : ""}`
               : "—"
           }
         />
@@ -242,8 +250,8 @@ export default function BusinessReview({
         <InfoRow
           label="Ngành nghề kinh doanh"
           value={
-            (data.businessFieldId || businessFieldName)
-              ? `${data.businessFieldId ?? ""}${businessFieldName ? ` - ${businessFieldName}` : ""}`
+            (businessFieldCode || businessFieldName)
+              ? `${businessFieldCode ?? ""}${businessFieldName ? ` - ${businessFieldName}` : ""}`
               : "—"
           }
         />

@@ -65,7 +65,7 @@ export function SearchableSelect({
   return (
     <div className="relative w-full" ref={containerRef}>
       <div
-        className={`w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-white flex items-center justify-between transition-colors ${
+        className={`w-full px-3 py-1 border border-gray-200 rounded-md text-sm bg-white flex items-center justify-between transition-colors ${
           disabled
             ? "bg-gray-50 cursor-not-allowed opacity-70"
             : "focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 hover:border-gray-300"

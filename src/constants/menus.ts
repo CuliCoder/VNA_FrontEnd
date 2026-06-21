@@ -134,8 +134,9 @@ export const SIDEBAR_MENUS: MenuItem[] = [
     children: [
       {
         title: "Thông tin doanh nghiệp",
-        url: "/dashboard/business/create",
-        permissions: ["ENTERPRISE_VIEW", "ENTERPRISE_APPROVE"],
+        url: "/dashboard/business/profile",
+        permissions: ["ENTERPRISE_VIEW", "ENTERPRISE_APPROVE",],
+        roles : ["ENTERPRISE"],
       },
     ],
   },
