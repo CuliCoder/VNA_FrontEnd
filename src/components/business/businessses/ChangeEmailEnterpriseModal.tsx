@@ -33,7 +33,7 @@ interface Props {
   onSuccess: (newEmail: string) => void;
 }
 
-const OTP_SECONDS = 60;
+const OTP_SECONDS = 300;
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
