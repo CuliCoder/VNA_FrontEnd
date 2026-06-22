@@ -45,19 +45,20 @@ export default function DashboardLayout({
   };
 
   const checkAccessToPath = (path: string) => {
-    let foundMenu: MenuItem | null = null;
+    let matchingMenus: MenuItem[] = [];
     const findMenu = (menus: MenuItem[]) => {
       for (const menu of menus) {
         if (menu.url && path.startsWith(menu.url)) {
-          foundMenu = menu;
+          matchingMenus.push(menu);
         }
         if (menu.children) findMenu(menu.children);
       }
     };
     findMenu(SIDEBAR_MENUS);
 
-    if (foundMenu) {
-      return hasAccess(foundMenu);
+    if (matchingMenus.length > 0) {
+      // Return true if the user has access to at least one of the matching menus
+      return matchingMenus.some(menu => hasAccess(menu));
     }
     return true; 
   };
@@ -75,17 +76,19 @@ export default function DashboardLayout({
   if (!isAuthenticated && !isLoading) return null;
 
   return (
-    <div className="flex h-screen bg-[#f3f4f6]">
-      <Sidebar />
-      <main className="flex-1 overflow-hidden flex flex-col">
-        <div className="flex-1 overflow-y-auto p-6 relative">
+    <div className="flex h-screen bg-[#f3f4f6] print:h-auto print:bg-white print:block">
+      <div className="print:hidden h-full shrink-0">
+        <Sidebar />
+      </div>
+      <main className="flex-1 overflow-hidden flex flex-col print:overflow-visible print:block">
+        <div className="flex-1 overflow-y-auto p-6 relative print:overflow-visible print:p-0 print:block">
           {/* Loading overlay — không unmount children */}
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
+            <div className="absolute inset-0 flex items-center justify-center bg-white z-10 print:hidden">
               Đang tải...
             </div>
           )}
-          <div style={{ visibility: isLoading ? "hidden" : "visible" }}>
+          <div style={{ visibility: isLoading ? "hidden" : "visible" }} className="print:block">
             {children}
           </div>
         </div>
