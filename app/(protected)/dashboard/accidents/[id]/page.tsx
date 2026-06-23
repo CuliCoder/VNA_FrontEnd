@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
+import { useEnterprise } from "@/hooks/useEnterprise";
 import { reportService } from "@/services/reportService";
 import { toast } from "sonner";
 import { ChevronRight, Save, Printer } from "lucide-react";
@@ -16,7 +16,7 @@ export default function ReportDeclarationPage() {
   const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+
 
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState<any>(null);
@@ -61,7 +61,7 @@ export default function ReportDeclarationPage() {
   const [accident2SummaryData, setAccident2SummaryData] = useState<AccidentSummaryData>(defaultAccidentSummaryData);
   const [accident2SummaryErrors, setAccident2SummaryErrors] = useState<Partial<Record<keyof AccidentSummaryData, string>>>({});
 
-  const enterpriseProfile = user?.enterpriseProfile as any;
+  const { user, enterprise: enterpriseProfile, isLoading: isEnterpriseLoading } = useEnterprise();
 
   const isReadOnly = reportData?.status === "SUBMITTED" || searchParams.get("mode") === "view";
 
@@ -436,7 +436,7 @@ export default function ReportDeclarationPage() {
     }
   };
 
-  if (loading) {
+  if (loading || isEnterpriseLoading) {
     return <div className="p-8 text-center text-gray-500">Đang tải dữ liệu...</div>;
   }
 
