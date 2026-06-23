@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Pagination } from "@/components/common";
 import { Eye, Edit2 } from "lucide-react";
 import { reportService, PeriodAndReport } from "@/services/reportService";
-import { useAuth } from "@/hooks/useAuth";
+import { useEnterprise } from "@/hooks/useEnterprise";
 import { useToast } from "@/hooks/use-toast";
 
 export function EnterpriseAccidentView() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { enterprise: enterpriseProfile } = useEnterprise();
   const { toast } = useToast();
   const [data, setData] = useState<PeriodAndReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,8 +54,8 @@ export function EnterpriseAccidentView() {
     }
   };
 
-  const enterpriseName = (user?.enterpriseProfile as any)?.name || "N/A";
-  const taxCode = (user?.enterpriseProfile as any)?.taxCode || "N/A";
+  const enterpriseName = enterpriseProfile?.name || "N/A";
+  const taxCode = enterpriseProfile?.taxCode || "N/A";
 
   const total = data.length;
   const totalPages = Math.max(1, Math.ceil(total / limit));
