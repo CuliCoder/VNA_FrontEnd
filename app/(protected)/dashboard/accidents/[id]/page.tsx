@@ -194,8 +194,9 @@ export default function ReportDeclarationPage() {
         router.push("/dashboard/accidents");
       }
       return true;
-    } catch (error) {
-      toast.error("Không thể lưu báo cáo");
+    } catch (error: any) {
+      const errorMessage = error.message || "Không thể lưu báo cáo";
+      toast.error(errorMessage);
       return false;
     }
   };
@@ -210,8 +211,9 @@ export default function ReportDeclarationPage() {
         attachedFileName: res.fileName,
         attachedFilePath: res.filePath
       }));
-    } catch (error) {
-      toast.error("Không thể tải lên file báo cáo");
+    } catch (error: any) {
+      const errorMessage = error.message || "Không thể tải lên file báo cáo";
+      toast.error(errorMessage);
     }
   };
 
@@ -225,8 +227,9 @@ export default function ReportDeclarationPage() {
       await reportService.submitReport(Number(id));
       toast.success("Đã gửi báo cáo thành công");
       router.push("/dashboard/accidents");
-    } catch (error) {
-      toast.error("Không thể gửi báo cáo");
+    } catch (error: any) {
+      const errorMessage = error.message || "Không thể gửi báo cáo";
+      toast.error(errorMessage);
     }
   };
 
