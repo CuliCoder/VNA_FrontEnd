@@ -113,11 +113,11 @@ export default function AccidentOverview({
           {!isReadOnly && (
             <label className={`text-blue-600 hover:underline mx-2 ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
               Tại đây
-              <input 
-                type="file" 
-                className="hidden" 
-                accept=".pdf,image/*" 
-                onChange={async (e) => {
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  accept=".pdf" 
+                  onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file || !onUploadFile) return;
                   try {
