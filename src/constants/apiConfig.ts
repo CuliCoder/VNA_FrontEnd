@@ -61,6 +61,8 @@ export const API_ENDPOINTS = {
   UPLOAD: "/enterprises/upload", //post : upload file pdf/anh thong tin doanh nghiep, delete : xoa file excel dinh kem khoi supabase storage
   import: "/enterprises/import", //post : upload file excel danh sach doanh nghiep, delete : xoa file excel dinh kem khoi supabase storage
   IMPORT: "/enterprises/import", // IMPORT danh sach doanh nghiep tu file excel
+  IMPORT_REVIEW: "/enterprises/import-preview",
+  IMPORT_CONFIRM: "/enterprises/import-confirm",
 },
 
 BUSINESS_FIELDS: {

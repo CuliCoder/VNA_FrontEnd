@@ -1,6 +1,7 @@
 import apiClient from "@/lib/api";
 import { API_ENDPOINTS } from "@/constants/apiConfig";
 import type { ApiResponse } from "@/types/api";
+import type { ImportPreviewResult } from "@/types/adminUser";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -311,6 +312,30 @@ export const businessService = {
           "Content-Type": "multipart/form-data",
         },
       }
+    );
+  },
+
+  /** Xem trước dữ liệu import doanh nghiệp */
+  importReview: async (file: File): Promise<ImportPreviewResult> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await apiClient.post<ImportPreviewResult>(
+      API_ENDPOINTS.ENTERPRISES.IMPORT_REVIEW,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return res.data;
+  },
+
+  /** Xác nhận import doanh nghiệp */
+  importConfirm: async (enterprises: any[]): Promise<void> => {
+    await apiClient.post(
+      API_ENDPOINTS.ENTERPRISES.IMPORT_CONFIRM,
+      { enterprises }
     );
   },
 
