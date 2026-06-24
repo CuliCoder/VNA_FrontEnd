@@ -13,7 +13,9 @@ import {
   Filter,
   Trash2,
   KeyRound,
+  FileDown,
 } from "lucide-react";
+import * as XLSX from "xlsx";
 import { adminUserService } from "@/services/adminUserService";
 import type { User, Role } from "@/types/auth";
 import type { UserListParams, ImportPreviewResult } from "@/types/adminUser";
@@ -229,6 +231,70 @@ export default function UserListTable() {
     fileInputRef.current?.click();
   };
 
+  const handleDownloadTemplate = async () => {
+    try {
+      toast.info("Đang tạo file mẫu...");
+      // Lấy danh sách vai trò mới nhất từ DB
+      const roleList = await adminUserService.getRoles();
+
+      const wb = XLSX.utils.book_new();
+
+      // ── Sheet 1: Danh sách người dùng (CHỈ có header, data từ dòng 2) ──
+      const headers = [
+        "Tài khoản (Tên đăng nhập)",
+        "Họ và tên",
+        "Email",
+        "Vai trò",
+        "Chức danh",
+        "Ngày sinh (YYYY-MM-DD)",
+        "Giới tính (Nam/Nữ/Khác)",
+        "Địa chỉ",
+      ];
+
+      // Sheet 1 CHỈ có header — backend đọc data từ dòng 2
+      const ws = XLSX.utils.aoa_to_sheet([headers]);
+      ws["!cols"] = [
+        { wch: 28 }, // Tài khoản
+        { wch: 25 }, // Họ và tên
+        { wch: 35 }, // Email
+        { wch: 30 }, // Vai trò
+        { wch: 20 }, // Chức danh
+        { wch: 28 }, // Ngày sinh
+        { wch: 24 }, // Giới tính
+        { wch: 40 }, // Địa chỉ
+      ];
+      XLSX.utils.book_append_sheet(wb, ws, "Danh sách người dùng");
+
+      // ── Sheet 2: Hướng dẫn ──
+      const guideData = [
+        ["Cột", "Bắt buộc?", "Hướng dẫn / Ghi chú"],
+        ["Tài khoản (Tên đăng nhập)", "✅ Bắt buộc", "Tên đăng nhập, chỉ gồm chữ thường, số và dấu chấm"],
+        ["Họ và tên", "✅ Bắt buộc", "Họ và tên đầy đủ"],
+        ["Email", "✅ Bắt buộc", "Định dạng email hợp lệ"],
+        ["Vai trò", "✅ Bắt buộc", `Nhập ĐÚNG tên vai trò: ${roleList.map((r) => r.name).join(" | ")}`],
+        ["Chức danh", "Không bắt buộc", ""],
+        ["Ngày sinh", "Không bắt buộc", "Định dạng: YYYY-MM-DD (ví dụ: 1990-01-15)"],
+        ["Giới tính", "Không bắt buộc", "Giá trị hợp lệ: Nam | Nữ | Khác"],
+        ["Địa chỉ", "Không bắt buộc", ""],
+        [],
+        ["⚠️ LƯU Ý QUAN TRỌNG", "", ""],
+        ["", "", "• Chỉ điền dữ liệu vào Sheet 'Danh sách người dùng'"],
+        ["", "", "• Không xóa dòng tiêu đề (dòng 1)"],
+        ["", "", "• Bắt đầu điền từ dòng 2"],
+        ["", "", "• Không thêm cột mới"],
+        ["", "", "• Cột 'Vai trò' phải nhập ĐÚNG TÊN (phân biệt hoa/thường)"],
+      ];
+      const wsGuide = XLSX.utils.aoa_to_sheet(guideData);
+      wsGuide["!cols"] = [{ wch: 30 }, { wch: 18 }, { wch: 80 }];
+      XLSX.utils.book_append_sheet(wb, wsGuide, "Hướng dẫn");
+
+      XLSX.writeFile(wb, "user_import_template.xlsx");
+      toast.success("Đã tải file mẫu thành công!");
+    } catch (err: any) {
+      toast.error(err.message || "Không thể tạo file mẫu");
+    }
+  };
+
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -286,6 +352,11 @@ export default function UserListTable() {
             accept=".xlsx, .xls"
             className="hidden"
           />
+          <Button variant="outline" size="sm" onClick={handleDownloadTemplate}>
+            <FileDown className="w-3.5 h-3.5 mr-1.5" />
+            Tải mẫu
+          </Button>
+
           <Button variant="outline" size="sm" onClick={handleImportClick}>
             <Upload className="w-3.5 h-3.5 mr-1.5" />
             Import
