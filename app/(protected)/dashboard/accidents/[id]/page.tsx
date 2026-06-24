@@ -135,6 +135,74 @@ export default function ReportDeclarationPage() {
   const handleSave = async (silent = false) => {
     if (!id) return false;
     
+    if (!silent) {
+      if (!validateCompanyInfo()) {
+        toast.error("Vui lòng nhập đầy đủ và chính xác thông tin doanh nghiệp");
+        if (currentSection !== "company_info") setCurrentSection("company_info");
+        return false;
+      }
+      
+      const summary1Errs = validateAccidentSummary(accident1SummaryData);
+      const detailErrsList: any[] = [];
+      let hasDetailErrs = false;
+      let sumDetailAccidents = 0;
+      let sumDetailVictims = 0;
+      let sumDetailUnmanagedVictims = 0;
+
+      accident1DetailData.forEach((detail, index) => {
+        sumDetailAccidents += Number(detail.summary.totalAccidents) || 0;
+        sumDetailVictims += Number(detail.summary.totalVictims) || 0;
+        sumDetailUnmanagedVictims += Number(detail.summary.unmanagedVictims) || 0;
+        const errs: any = validateAccidentSummary(detail.summary);
+        if (!detail.cause) errs.cause = "Vui lòng chọn nguyên nhân";
+        if (!detail.factor) errs.factor = "Vui lòng chọn yếu tố";
+        if (!detail.job) errs.job = "Vui lòng chọn nghề nghiệp";
+        if (Number(detail.summary.totalAccidents) <= 0) {
+          errs.totalAccidents = "Tổng số vụ phải lớn hơn 0";
+        }
+        detailErrsList[index] = errs;
+        if (Object.keys(errs).length > 0) hasDetailErrs = true;
+      });
+      const isNotEqual = sumDetailAccidents !== (Number(accident1SummaryData.totalAccidents) || 0);
+      const isVictimsNotEqual = sumDetailVictims !== (Number(accident1SummaryData.totalVictims) || 0);
+      const isUnmanagedNotEqual = sumDetailUnmanagedVictims !== (Number(accident1SummaryData.unmanagedVictims) || 0);
+      const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual) && accident1DetailData.length > 0;
+      
+      if (hasSumError) {
+        detailErrsList.forEach(errs => {
+          if (isNotEqual && !errs.totalAccidents) errs.totalAccidents = "Tổng số vụ không khớp với mục (1)";
+          if (isVictimsNotEqual && !errs.totalVictims) errs.totalVictims = "Tổng số người không khớp với mục (1)";
+          if (isUnmanagedNotEqual && !errs.unmanagedVictims) errs.unmanagedVictims = "Không khớp với mục (1)";
+        });
+        hasDetailErrs = true;
+      }
+      
+      setAccident1SummaryErrors(summary1Errs);
+      setAccident1DetailErrors(detailErrsList);
+
+      if (Object.keys(summary1Errs).length > 0 || hasDetailErrs) {
+        if (hasSumError) {
+          toast.error("Tổng số vụ/số người bị nạn ở mục (2) không khớp với mục (1)");
+        }
+        const hasOtherDetailErrs = detailErrsList.some(e => Object.keys(e).some(k => !['totalAccidents', 'totalVictims', 'unmanagedVictims'].includes(k) || (e[k] !== "Tổng số vụ không khớp với mục (1)" && e[k] !== "Tổng số người không khớp với mục (1)" && e[k] !== "Không khớp với mục (1)")));
+        if (!hasSumError || Object.keys(summary1Errs).length > 0 || hasOtherDetailErrs) {
+          toast.error("Vui lòng kiểm tra lại thông tin các vụ tai nạn lao động tại Mục 1");
+        }
+        if (currentSection !== "accident_1") setCurrentSection("accident_1");
+        if (Object.keys(summary1Errs).length > 0) setAccident1Tab('summary');
+        else if (hasDetailErrs) setAccident1Tab('details');
+        return false;
+      }
+
+      const summary2Errs = validateAccidentSummary(accident2SummaryData);
+      setAccident2SummaryErrors(summary2Errs);
+      if (Object.keys(summary2Errs).length > 0) {
+        toast.error("Vui lòng nhập đầy đủ và chính xác thông tin các vụ tai nạn (Mục 2)");
+        if (currentSection !== "accident_2") setCurrentSection("accident_2");
+        return false;
+      }
+    }
+
     try {
       const num = (val: string) => Number(val) || 0;
 
@@ -233,11 +301,29 @@ export default function ReportDeclarationPage() {
     }
   };
 
+  const handleExportWord = async () => {
+    if (!id) return;
+    try {
+      const blob = await reportService.exportWord(Number(id));
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Bao_cao_tai_nan_lao_dong_${reportData?.reportPeriod?.year || id}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success("Đã tải xuống báo cáo thành công");
+    } catch (error: any) {
+      toast.error("Không thể tải xuống báo cáo");
+    }
+  };
+
   const validateCompanyInfo = () => {
     const errs: any = {};
-    if (!employeeTotal) errs.employeeTotal = "Vui lòng nhập tổng số lao động";
+    if (!employeeTotal || Number(employeeTotal) <= 0) errs.employeeTotal = "Tổng số lao động phải lớn hơn 0";
     if (!femaleTotal) errs.femaleTotal = "Vui lòng nhập số lao động nữ";
-    if (!salaryFund) errs.salaryFund = "Vui lòng nhập tổng quỹ lương";
+    if (!salaryFund || Number(salaryFund) <= 0) errs.salaryFund = "Tổng quỹ lương phải lớn hơn 0";
     
     if (employeeTotal && femaleTotal && Number(employeeTotal) < Number(femaleTotal)) {
       errs.femaleTotal = "Số lao động nữ không được lớn hơn tổng số lao động";
@@ -263,6 +349,10 @@ export default function ReportDeclarationPage() {
     
     const num = (val: string) => Number(val) || 0;
     
+    if (num(data.totalAccidents) > 0 && num(data.totalVictims) <= 0) {
+      errs.totalVictims = "Tổng số người bị nạn phải lớn hơn 0";
+    }
+    
     if (num(data.totalAccidents) < num(data.fatalAccidents)) {
       errs.fatalAccidents = "Không được lớn hơn tổng số vụ";
     }
@@ -279,8 +369,8 @@ export default function ReportDeclarationPage() {
     if (num(data.totalVictims) < num(data.severeInjuredVictims)) {
       errs.severeInjuredVictims = "Không được lớn hơn tổng số người bị nạn";
     }
-    if (num(data.totalVictims) < (num(data.deadVictims) + num(data.severeInjuredVictims))) {
-      errs.totalVictims = "Phải >= tổng số người chết và bị thương nặng";
+    if (num(data.totalVictims) < Math.max(num(data.femaleVictims), num(data.deadVictims), num(data.severeInjuredVictims))) {
+      errs.totalVictims = "Phải >= số lao động nữ, người chết và bị thương nặng";
     }
     
     if (num(data.unmanagedVictims) < num(data.unmanagedFemaleVictims)) {
@@ -292,8 +382,8 @@ export default function ReportDeclarationPage() {
     if (num(data.unmanagedVictims) < num(data.unmanagedSevereInjuredVictims)) {
       errs.unmanagedSevereInjuredVictims = "Không được lớn hơn tổng số (không QL)";
     }
-    if (num(data.unmanagedVictims) < (num(data.unmanagedDeadVictims) + num(data.unmanagedSevereInjuredVictims))) {
-      errs.unmanagedVictims = "Phải >= tổng người chết và thương nặng (không QL)";
+    if (num(data.unmanagedVictims) < Math.max(num(data.unmanagedFemaleVictims), num(data.unmanagedDeadVictims), num(data.unmanagedSevereInjuredVictims))) {
+      errs.unmanagedVictims = "Phải >= số nữ, chết và thương nặng (không QL)";
     }
     
     if (num(data.totalCost) < (num(data.medicalCost) + num(data.salaryCost) + num(data.compensationCost))) {
@@ -304,59 +394,143 @@ export default function ReportDeclarationPage() {
   };
 
   const handleSectionChange = async (newSection: string) => {
-    if (newSection === "overview" && currentSection !== "overview") {
-      if (!validateCompanyInfo()) {
-        toast.error("Vui lòng nhập đầy đủ và chính xác thông tin doanh nghiệp");
-        if (currentSection !== "company_info") setCurrentSection("company_info");
-        return;
-      }
+    if (newSection === currentSection) return;
 
-      const summary1Errs = validateAccidentSummary(accident1SummaryData);
-      const detailErrsList: any[] = [];
-      let hasDetailErrs = false;
-      let sumDetailAccidents = 0;
+    if (!isReadOnly) {
+      if (newSection === "overview") {
+        if (!validateCompanyInfo()) {
+          toast.error("Vui lòng nhập đầy đủ và chính xác thông tin doanh nghiệp");
+          if (currentSection !== "company_info") setCurrentSection("company_info");
+          return;
+        }
 
-      accident1DetailData.forEach((detail, index) => {
-        sumDetailAccidents += Number(detail.summary.totalAccidents) || 0;
-        const errs = validateAccidentSummary(detail.summary);
-        detailErrsList[index] = errs;
-        if (Object.keys(errs).length > 0) hasDetailErrs = true;
-      });
-      const isExceed = sumDetailAccidents > (Number(accident1SummaryData.totalAccidents) || 0);
-      if (isExceed) {
-        detailErrsList.forEach(errs => {
-          if (!errs.totalAccidents) errs.totalAccidents = "Vượt quá tổng số vụ ở Tab 1";
+        const summary1Errs = validateAccidentSummary(accident1SummaryData);
+        const detailErrsList: any[] = [];
+        let hasDetailErrs = false;
+        let sumDetailAccidents = 0;
+        let sumDetailVictims = 0;
+        let sumDetailUnmanagedVictims = 0;
+
+        accident1DetailData.forEach((detail, index) => {
+          sumDetailAccidents += Number(detail.summary.totalAccidents) || 0;
+          sumDetailVictims += Number(detail.summary.totalVictims) || 0;
+          sumDetailUnmanagedVictims += Number(detail.summary.unmanagedVictims) || 0;
+          const errs: any = validateAccidentSummary(detail.summary);
+          if (!detail.cause) errs.cause = "Vui lòng chọn nguyên nhân";
+          if (!detail.factor) errs.factor = "Vui lòng chọn yếu tố";
+          if (!detail.job) errs.job = "Vui lòng chọn nghề nghiệp";
+          if (Number(detail.summary.totalAccidents) <= 0) {
+            errs.totalAccidents = "Tổng số vụ phải lớn hơn 0";
+          }
+          detailErrsList[index] = errs;
+          if (Object.keys(errs).length > 0) hasDetailErrs = true;
         });
-        hasDetailErrs = true;
-      }
-      
-      setAccident1SummaryErrors(summary1Errs);
-      setAccident1DetailErrors(detailErrsList);
-
-      if (Object.keys(summary1Errs).length > 0 || hasDetailErrs) {
-        if (isExceed) {
-          toast.error("Tổng số vụ ở chi tiết các vụ tai nạn không được lớn hơn tổng số vụ ở Tab 1");
+        const isNotEqual = sumDetailAccidents !== (Number(accident1SummaryData.totalAccidents) || 0);
+        const isVictimsNotEqual = sumDetailVictims !== (Number(accident1SummaryData.totalVictims) || 0);
+        const isUnmanagedNotEqual = sumDetailUnmanagedVictims !== (Number(accident1SummaryData.unmanagedVictims) || 0);
+        const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual) && accident1DetailData.length > 0;
+        
+        if (hasSumError) {
+          detailErrsList.forEach(errs => {
+            if (isNotEqual && !errs.totalAccidents) errs.totalAccidents = "Tổng số vụ không khớp với mục (1)";
+            if (isVictimsNotEqual && !errs.totalVictims) errs.totalVictims = "Tổng số người không khớp với mục (1)";
+            if (isUnmanagedNotEqual && !errs.unmanagedVictims) errs.unmanagedVictims = "Không khớp với mục (1)";
+          });
+          hasDetailErrs = true;
         }
-        if (!isExceed || Object.keys(summary1Errs).length > 0 || detailErrsList.some(e => Object.keys(e).some(k => k !== 'totalAccidents' || e[k] !== "Vượt quá tổng số vụ ở Tab 1"))) {
-          toast.error("Vui lòng nhập đầy đủ và chính xác thông tin các vụ tai nạn (Mục 1)");
+        
+        setAccident1SummaryErrors(summary1Errs);
+        setAccident1DetailErrors(detailErrsList);
+
+        if (Object.keys(summary1Errs).length > 0 || hasDetailErrs) {
+          if (hasSumError) {
+            toast.error("Tổng số vụ/số người bị nạn ở mục (2) không khớp với mục (1)");
+          }
+          const hasOtherDetailErrs = detailErrsList.some(e => Object.keys(e).some(k => !['totalAccidents', 'totalVictims', 'unmanagedVictims'].includes(k) || (e[k] !== "Tổng số vụ không khớp với mục (1)" && e[k] !== "Tổng số người không khớp với mục (1)" && e[k] !== "Không khớp với mục (1)")));
+          if (!hasSumError || Object.keys(summary1Errs).length > 0 || hasOtherDetailErrs) {
+            toast.error("Vui lòng kiểm tra lại thông tin các vụ tai nạn lao động tại Mục 1");
+          }
+          setCurrentSection("accident_1");
+          if (Object.keys(summary1Errs).length > 0) setAccident1Tab('summary');
+          else if (hasDetailErrs) setAccident1Tab('details');
+          return;
         }
-        setCurrentSection("accident_1");
-        if (Object.keys(summary1Errs).length > 0) setAccident1Tab('summary');
-        else if (hasDetailErrs) setAccident1Tab('details');
-        return;
-      }
 
-      const summary2Errs = validateAccidentSummary(accident2SummaryData);
-      setAccident2SummaryErrors(summary2Errs);
-      if (Object.keys(summary2Errs).length > 0) {
-        toast.error("Vui lòng nhập đầy đủ và chính xác thông tin các vụ tai nạn (Mục 2)");
-        setCurrentSection("accident_2");
-        return;
-      }
+        const summary2Errs = validateAccidentSummary(accident2SummaryData);
+        setAccident2SummaryErrors(summary2Errs);
+        if (Object.keys(summary2Errs).length > 0) {
+          toast.error("Vui lòng nhập đầy đủ và chính xác thông tin các vụ tai nạn (Mục 2)");
+          setCurrentSection("accident_2");
+          return;
+        }
 
-      if (!isReadOnly) {
         const success = await handleSave(true);
         if (!success) return;
+      } else {
+        if (currentSection === "company_info") {
+          if (!validateCompanyInfo()) {
+            toast.error("Vui lòng nhập đầy đủ và chính xác thông tin doanh nghiệp");
+            return;
+          }
+        } else if (currentSection === "accident_1") {
+          const summaryErrs = validateAccidentSummary(accident1SummaryData);
+          const detailErrsList: any[] = [];
+          let hasDetailErrs = false;
+          let sumDetailAccidents = 0;
+          let sumDetailVictims = 0;
+          let sumDetailUnmanagedVictims = 0;
+
+          accident1DetailData.forEach((detail, index) => {
+            sumDetailAccidents += Number(detail.summary.totalAccidents) || 0;
+            sumDetailVictims += Number(detail.summary.totalVictims) || 0;
+            sumDetailUnmanagedVictims += Number(detail.summary.unmanagedVictims) || 0;
+            const errs: any = validateAccidentSummary(detail.summary);
+            if (!detail.cause) errs.cause = "Vui lòng chọn nguyên nhân";
+            if (!detail.factor) errs.factor = "Vui lòng chọn yếu tố";
+            if (!detail.job) errs.job = "Vui lòng chọn nghề nghiệp";
+            if (Number(detail.summary.totalAccidents) <= 0) {
+              errs.totalAccidents = "Tổng số vụ phải lớn hơn 0";
+            }
+            detailErrsList[index] = errs;
+            if (Object.keys(errs).length > 0) hasDetailErrs = true;
+          });
+          const isNotEqual = sumDetailAccidents !== (Number(accident1SummaryData.totalAccidents) || 0);
+          const isVictimsNotEqual = sumDetailVictims !== (Number(accident1SummaryData.totalVictims) || 0);
+          const isUnmanagedNotEqual = sumDetailUnmanagedVictims !== (Number(accident1SummaryData.unmanagedVictims) || 0);
+          const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual) && accident1DetailData.length > 0;
+          
+          if (hasSumError) {
+            detailErrsList.forEach(errs => {
+              if (isNotEqual && !errs.totalAccidents) errs.totalAccidents = "Tổng số vụ không khớp với mục (1)";
+              if (isVictimsNotEqual && !errs.totalVictims) errs.totalVictims = "Tổng số người không khớp với mục (1)";
+              if (isUnmanagedNotEqual && !errs.unmanagedVictims) errs.unmanagedVictims = "Không khớp với mục (1)";
+            });
+            hasDetailErrs = true;
+          }
+          
+          setAccident1SummaryErrors(summaryErrs);
+          setAccident1DetailErrors(detailErrsList);
+
+          if (Object.keys(summaryErrs).length > 0 || hasDetailErrs) {
+            if (hasSumError) {
+              toast.error("Tổng số vụ/số người bị nạn ở mục (2) không khớp với mục (1)");
+            }
+            const hasOtherDetailErrs = detailErrsList.some(e => Object.keys(e).some(k => !['totalAccidents', 'totalVictims', 'unmanagedVictims'].includes(k) || (e[k] !== "Tổng số vụ không khớp với mục (1)" && e[k] !== "Tổng số người không khớp với mục (1)" && e[k] !== "Không khớp với mục (1)")));
+            if (!hasSumError || Object.keys(summaryErrs).length > 0 || hasOtherDetailErrs) {
+              toast.error("Vui lòng kiểm tra lại thông tin các vụ tai nạn lao động tại Mục 1");
+            }
+            if (Object.keys(summaryErrs).length > 0) setAccident1Tab('summary');
+            else if (hasDetailErrs) setAccident1Tab('details');
+            return;
+          }
+        } else if (currentSection === "accident_2") {
+          const summaryErrs = validateAccidentSummary(accident2SummaryData);
+          setAccident2SummaryErrors(summaryErrs);
+          if (Object.keys(summaryErrs).length > 0) {
+            toast.error("Vui lòng nhập đầy đủ và chính xác thông tin các vụ tai nạn (Mục 2)");
+            return;
+          }
+        }
       }
     }
     
@@ -380,19 +554,35 @@ export default function ReportDeclarationPage() {
       const detailErrsList: any[] = [];
       let hasDetailErrs = false;
       let sumDetailAccidents = 0;
+      let sumDetailVictims = 0;
+      let sumDetailUnmanagedVictims = 0;
 
       accident1DetailData.forEach((detail, index) => {
         sumDetailAccidents += Number(detail.summary.totalAccidents) || 0;
-        const errs = validateAccidentSummary(detail.summary);
+        sumDetailVictims += Number(detail.summary.totalVictims) || 0;
+        sumDetailUnmanagedVictims += Number(detail.summary.unmanagedVictims) || 0;
+        const errs: any = validateAccidentSummary(detail.summary);
+        if (!detail.cause) errs.cause = "Vui lòng chọn nguyên nhân";
+        if (!detail.factor) errs.factor = "Vui lòng chọn yếu tố";
+        if (!detail.job) errs.job = "Vui lòng chọn nghề nghiệp";
+        if (Number(detail.summary.totalAccidents) <= 0) {
+          errs.totalAccidents = "Tổng số vụ phải lớn hơn 0";
+        }
         detailErrsList[index] = errs;
         if (Object.keys(errs).length > 0) {
           hasDetailErrs = true;
         }
       });
-      const isExceed = sumDetailAccidents > (Number(accident1SummaryData.totalAccidents) || 0);
-      if (isExceed) {
+      const isNotEqual = sumDetailAccidents !== (Number(accident1SummaryData.totalAccidents) || 0);
+      const isVictimsNotEqual = sumDetailVictims !== (Number(accident1SummaryData.totalVictims) || 0);
+      const isUnmanagedNotEqual = sumDetailUnmanagedVictims !== (Number(accident1SummaryData.unmanagedVictims) || 0);
+      const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual) && accident1DetailData.length > 0;
+      
+      if (hasSumError) {
         detailErrsList.forEach(errs => {
-          if (!errs.totalAccidents) errs.totalAccidents = "Vượt quá tổng số vụ ở Tab 1";
+          if (isNotEqual && !errs.totalAccidents) errs.totalAccidents = "Tổng số vụ không khớp với mục (1)";
+          if (isVictimsNotEqual && !errs.totalVictims) errs.totalVictims = "Tổng số người không khớp với mục (1)";
+          if (isUnmanagedNotEqual && !errs.unmanagedVictims) errs.unmanagedVictims = "Không khớp với mục (1)";
         });
         hasDetailErrs = true;
       }
@@ -401,10 +591,11 @@ export default function ReportDeclarationPage() {
       setAccident1DetailErrors(detailErrsList);
 
       if (Object.keys(summaryErrs).length > 0 || hasDetailErrs) {
-        if (isExceed) {
-          toast.error("Tổng số vụ ở chi tiết các vụ tai nạn không được lớn hơn tổng số vụ ở Tab 1");
+        if (hasSumError) {
+          toast.error("Tổng số vụ/số người bị nạn ở mục (2) không khớp với mục (1)");
         }
-        if (!isExceed || Object.keys(summaryErrs).length > 0 || detailErrsList.some(e => Object.keys(e).some(k => k !== 'totalAccidents' || e[k] !== "Vượt quá tổng số vụ ở Tab 1"))) {
+        const hasOtherDetailErrs = detailErrsList.some(e => Object.keys(e).some(k => !['totalAccidents', 'totalVictims', 'unmanagedVictims'].includes(k) || (e[k] !== "Tổng số vụ không khớp với mục (1)" && e[k] !== "Tổng số người không khớp với mục (1)" && e[k] !== "Không khớp với mục (1)")));
+        if (!hasSumError || Object.keys(summaryErrs).length > 0 || hasOtherDetailErrs) {
           toast.error("Vui lòng nhập đầy đủ và chính xác thông tin các vụ tai nạn");
         }
         if (Object.keys(summaryErrs).length > 0) setAccident1Tab('summary');
@@ -489,9 +680,9 @@ export default function ReportDeclarationPage() {
             <>
               <button 
                 className="px-4 py-2 border border-blue-200 bg-white text-blue-600 rounded-md text-sm font-medium hover:bg-blue-50 transition-colors flex items-center shadow-sm"
-                onClick={() => window.print()}
+                onClick={handleExportWord}
               >
-                <Printer className="w-4 h-4 mr-2" /> In báo cáo
+                <Printer className="w-4 h-4 mr-2" /> Tải báo cáo
               </button>
               {!isReadOnly && (
                 <button 
@@ -655,7 +846,17 @@ export default function ReportDeclarationPage() {
               </button>
               <button 
                 className={`px-4 py-2 text-sm font-medium border-b-2 ${accident1Tab === 'details' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                onClick={() => setAccident1Tab('details')}
+                onClick={() => {
+                  if (accident1Tab === 'summary' && !isReadOnly) {
+                    const summaryErrs = validateAccidentSummary(accident1SummaryData);
+                    setAccident1SummaryErrors(summaryErrs);
+                    if (Object.keys(summaryErrs).length > 0) {
+                      toast.error("Vui lòng nhập đầy đủ và chính xác thông tin (1) Tổng số vụ");
+                      return;
+                    }
+                  }
+                  setAccident1Tab('details');
+                }}
               >
                 (2) Chi tiết các vụ tai nạn lao động
               </button>
