@@ -81,6 +81,7 @@ REPORTS: {
   UPDATE: (id: number) => `/reports/${id}`,
   SUBMIT: (id: number) => `/reports/${id}/submit`,
   UPLOAD: (id: number) => `/reports/${id}/upload`,
+  EXPORT_WORD: (id: number) => `/reports/${id}/export-word`,
 }
 
 } as const;

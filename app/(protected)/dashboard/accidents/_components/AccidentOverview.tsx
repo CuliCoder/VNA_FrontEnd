@@ -65,26 +65,39 @@ export default function AccidentOverview({
     const children = catList.filter(c => c.parentId);
 
     if (parents.length > 0 && children.length > 0) {
-      return parents.map(parent => (
-        <React.Fragment key={`parent-${parent.id}`}>
-          <tr className="font-semibold bg-gray-50">
-            <td colSpan={13} className="border border-gray-200 p-2 pl-6">{parent.name}</td>
-          </tr>
-          {children.filter(c => c.parentId === parent.id).map(child => {
-            const rowValues = sumDetails(item => String(item[type]) === String(child.id));
-            return (
-              <tr key={`child-${child.id}`} className="bg-white">
-                <td className="border border-gray-200 p-2 pl-8">{child.name}</td>
-                <td className="border border-gray-200 p-2 text-center">{child.id}</td>
-                {rowValues.map((v, i) => <td key={i} className="border border-gray-200 p-2 text-center">{v}</td>)}
-              </tr>
-            );
-          })}
-        </React.Fragment>
-      ));
+      return parents.map(parent => {
+        const parentChildren = children.filter(c => c.parentId === parent.id);
+        const selectedChildren = parentChildren.filter(child => 
+          accident1DetailData.some(item => String(item[type]) === String(child.id))
+        );
+
+        if (selectedChildren.length === 0) return null;
+
+        return (
+          <React.Fragment key={`parent-${parent.id}`}>
+            <tr className="font-semibold bg-gray-50">
+              <td colSpan={13} className="border border-gray-200 p-2 pl-6">{parent.name}</td>
+            </tr>
+            {selectedChildren.map(child => {
+              const rowValues = sumDetails(item => String(item[type]) === String(child.id));
+              return (
+                <tr key={`child-${child.id}`} className="bg-white">
+                  <td className="border border-gray-200 p-2 pl-8">{child.name}</td>
+                  <td className="border border-gray-200 p-2 text-center">{child.id}</td>
+                  {rowValues.map((v, i) => <td key={i} className="border border-gray-200 p-2 text-center">{v}</td>)}
+                </tr>
+              );
+            })}
+          </React.Fragment>
+        );
+      });
     }
 
-    return catList.map(item => {
+    const selectedItems = catList.filter(item => 
+      accident1DetailData.some(detail => String(detail[type]) === String(item.id))
+    );
+
+    return selectedItems.map(item => {
       const rowValues = sumDetails(detail => String(detail[type]) === String(item.id));
       return (
         <tr key={`${type}-${item.id}`} className="bg-white">

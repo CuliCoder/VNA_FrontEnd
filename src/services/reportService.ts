@@ -100,4 +100,14 @@ export const reportService = {
     );
     return response.data;
   },
+
+  async exportWord(id: number): Promise<Blob> {
+    const response = await apiClient.get<Blob>(
+      API_ENDPOINTS.REPORTS.EXPORT_WORD(id),
+      {
+        responseType: "blob",
+      }
+    );
+    return response.data;
+  },
 };

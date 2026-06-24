@@ -59,7 +59,7 @@ export default function AccidentDetailForm({ isReadOnly, totalAccidents, data = 
                   <div className="space-y-2">
                     <label className="text-gray-700 text-sm font-medium">1. Phân theo nguyên nhân xảy ra TNLĐ</label>
                     <select 
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                      className={`w-full border ${itemErrors.cause ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2`} 
                       disabled={isReadOnly || loading}
                       value={itemData.cause}
                       onChange={(e) => onChange(index, 'cause', e.target.value, false)}
@@ -69,11 +69,12 @@ export default function AccidentDetailForm({ isReadOnly, totalAccidents, data = 
                         <option key={c.id} value={c.id.toString()}>{c.name}</option>
                       ))}
                     </select>
+                    {itemErrors.cause && <p className="text-red-500 text-xs mt-1">{itemErrors.cause}</p>}
                   </div>
                   <div className="space-y-2">
                     <label className="text-gray-700 text-sm font-medium">2. Phân theo yếu tố gây chấn thương</label>
                     <select 
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                      className={`w-full border ${itemErrors.factor ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2`} 
                       disabled={isReadOnly || loading}
                       value={itemData.factor}
                       onChange={(e) => onChange(index, 'factor', e.target.value, false)}
@@ -83,11 +84,12 @@ export default function AccidentDetailForm({ isReadOnly, totalAccidents, data = 
                         <option key={f.id} value={f.id.toString()}>{f.name}</option>
                       ))}
                     </select>
+                    {itemErrors.factor && <p className="text-red-500 text-xs mt-1">{itemErrors.factor}</p>}
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-gray-700 text-sm font-medium">3. Phân theo nghề nghiệp</label>
                     <select 
-                      className="w-full md:w-1/2 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                      className={`w-full md:w-1/2 border ${itemErrors.job ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2`} 
                       disabled={isReadOnly || loading}
                       value={itemData.job}
                       onChange={(e) => onChange(index, 'job', e.target.value, false)}
@@ -97,6 +99,7 @@ export default function AccidentDetailForm({ isReadOnly, totalAccidents, data = 
                         <option key={o.id} value={o.id.toString()}>{o.name}</option>
                       ))}
                     </select>
+                    {itemErrors.job && <p className="text-red-500 text-xs mt-1">{itemErrors.job}</p>}
                   </div>
                 </div>
 
