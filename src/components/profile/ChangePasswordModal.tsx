@@ -8,24 +8,7 @@ import { PasswordInput } from "@/components/common/PasswordInput";
 import { userService } from "@/services/userService";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-
-const calculatePasswordStrength = (password: string) => {
-  let score = 0;
-  if (!password) return score;
-  if (password.length >= 8) score += 1;
-  if (/[a-z]/.test(password)) score += 1;
-  if (/[A-Z]/.test(password)) score += 1;
-  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`@]/.test(password)) score += 1;
-  return score;
-};
-
-const getStrengthLabel = (score: number) => {
-  if (score === 0) return { label: "", color: "bg-gray-200" };
-  if (score <= 2) return { label: "Yếu", color: "bg-red-500" };
-  if (score === 3) return { label: "Trung bình", color: "bg-yellow-500" };
-  if (score === 4) return { label: "Khá", color: "bg-blue-500" };
-  return { label: "Mạnh", color: "bg-green-500" };
-};
+import { PasswordStrengthMeter } from "@/components/common/PasswordStrengthMeter";
 
 const schema = z
   .object({
@@ -62,8 +45,6 @@ export function ChangePasswordModal({ open, onClose }: Props) {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   const newPasswordValue = watch("newPassword", "");
-  const strengthScore = calculatePasswordStrength(newPasswordValue);
-  const strengthInfo = getStrengthLabel(strengthScore);
 
   const handleClose = () => {
     reset();
@@ -132,26 +113,7 @@ export function ChangePasswordModal({ open, onClose }: Props) {
             error={errors.newPassword?.message}
             {...register("newPassword")}
           />
-          {newPasswordValue && (
-            <div className="mt-2">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-gray-500">Độ mạnh mật khẩu:</span>
-                <span className={`text-xs font-medium ${strengthInfo.color.replace('bg-', 'text-')}`}>
-                  {strengthInfo.label}
-                </span>
-              </div>
-              <div className="flex gap-1 h-1.5">
-                {[1, 2, 3, 4, 5].map((level) => (
-                  <div
-                    key={level}
-                    className={`h-full flex-1 rounded-full transition-all duration-300 ${
-                      strengthScore >= level ? strengthInfo.color : "bg-gray-200"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          <PasswordStrengthMeter password={newPasswordValue} />
         </div>
         <PasswordInput
           placeholder="Nhập lại mật khẩu mới"
