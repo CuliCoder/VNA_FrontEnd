@@ -92,5 +92,27 @@ export const API_ENDPOINTS = {
     STATUS: (id: number) => `/report_periods/${id}/status`,
     
   }
+=======
+BUSINESS_FIELDS: {
+   ROOT: "/business-fields", //get : lay danh sach nganh nghe kinh doanh, post : tao moi nganh nghe kinh doanh
+  DETAIL: (id: number) => `/business-fields/${id}`, //patch : cap nhat nganh nghe kinh doanh, delete : xoa nganh nghe kinh doanh
+  IMPORT: "/business-fields/import",
+},
+BUSINESS_TYPES: {
+   ROOT: "/business-types", //get : lay danh sach loai hinh kinh doanh, post : tao moi loai hinh kinh doanh
+  DETAIL: (id: number) => `/business-types/${id}`, //patch : cap nhat loai hinh kinh doanh, delete : xoa loai hinh kinh doanh
+  IMPORT: "/business-types/import",
+},
+REPORTS: {
+  CATEGORIES: "/reports/categories",
+  LIST: "/reports",
+  INIT: (periodId: number) => `/reports/period/${periodId}/init`,
+  DETAIL: (id: number) => `/reports/${id}`,
+  UPDATE: (id: number) => `/reports/${id}`,
+  SUBMIT: (id: number) => `/reports/${id}/submit`,
+  UPLOAD: (id: number) => `/reports/${id}/upload`,
+  EXPORT_WORD: (id: number) => `/reports/${id}/export-word`,
+}
+>>>>>>> main
 
 } as const;

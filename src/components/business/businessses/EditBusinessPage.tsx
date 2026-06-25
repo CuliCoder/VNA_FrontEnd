@@ -216,7 +216,7 @@ export default function EditBusinessPage({ enterpriseId }: Props) {
         onSubmitDirect={handleSubmit}
         onCancel={handleCancel}
         // Admin: email bị khóa; Enterprise: có nút "Thay đổi"
-        emailReadonly={isAdmin}
+        emailReadonly={true}
         onChangeEmail={isEnterprise ? () => setShowEmailModal(true) : undefined}
       />
 

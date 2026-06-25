@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useEnterprise } from "@/hooks/useEnterprise";
 import EditBusinessPage from "@/components/business/businessses/EditBusinessPage";
 
 export default function BusinessProfilePage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useEnterprise();
 
   if (isLoading) {
     return (
