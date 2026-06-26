@@ -12,19 +12,24 @@ export function EnterpriseAccidentView() {
   const router = useRouter();
   const { enterprise: enterpriseProfile } = useEnterprise();
   const { toast } = useToast();
-  const [data, setData] = useState<PeriodAndReport[]>([]);
+  const [allData, setAllData] = useState<PeriodAndReport[]>([]);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState<string>(currentYear.toString());
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
-  const fetchReports = async (selectedYear: string) => {
+  const fetchAllData = async () => {
     try {
       setLoading(true);
-      const res = await reportService.getPeriodsAndReports(parseInt(selectedYear));
-      setData(res);
-      setPage(1);
+      const res = await reportService.getPeriodsAndReports();
+      setAllData(res);
+      const years = Array.from(new Set(res.map(item => item.period.year))).sort((a, b) => b - a);
+      setAvailableYears(years);
+      if (years.length > 0 && !years.includes(parseInt(year))) {
+        setYear(years[0].toString());
+      }
     } catch (error) {
       console.error(error);
       toast({
@@ -38,7 +43,11 @@ export function EnterpriseAccidentView() {
   };
 
   useEffect(() => {
-    fetchReports(year);
+    fetchAllData();
+  }, []);
+
+  useEffect(() => {
+    setPage(1);
   }, [year]);
 
   const handleInitReport = async (periodId: number) => {
@@ -57,9 +66,10 @@ export function EnterpriseAccidentView() {
   const enterpriseName = enterpriseProfile?.name || "N/A";
   const taxCode = enterpriseProfile?.taxCode || "N/A";
 
-  const total = data.length;
+  const currentYearData = allData.filter(item => item.period.year === parseInt(year));
+  const total = currentYearData.length;
   const totalPages = Math.max(1, Math.ceil(total / limit));
-  const paginatedData = data.slice((page - 1) * limit, page * limit);
+  const paginatedData = currentYearData.slice((page - 1) * limit, page * limit);
 
   return (
     <div className="flex flex-col h-full">
@@ -70,14 +80,15 @@ export function EnterpriseAccidentView() {
           onChange={(e) => setYear(e.target.value)}
           className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          {Array.from({ length: 5 }, (_, i) => {
-            const y = currentYear - i;
-            return (
+          {availableYears.length > 0 ? (
+            availableYears.map((y) => (
               <option key={y} value={y}>
                 {y}
               </option>
-            );
-          })}
+            ))
+          ) : (
+            <option value={currentYear}>{currentYear}</option>
+          )}
         </select>
       </div>
 
@@ -98,7 +109,7 @@ export function EnterpriseAccidentView() {
             <TableRow>
               <TableCell colSpan={5} className="text-center py-8 text-gray-500">Đang tải dữ liệu...</TableCell>
             </TableRow>
-          ) : data.length === 0 ? (
+          ) : currentYearData.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center py-8 text-gray-500">Không có dữ liệu cho năm {year}</TableCell>
             </TableRow>
