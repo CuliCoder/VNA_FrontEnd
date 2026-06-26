@@ -95,9 +95,7 @@ export function useAuth() {
   const resetPassword = async (
     payload: ResetPasswordRequest,
   ): Promise<ResetPasswordResponse | null> => {
-    return withLoading(async () => {
-      return await authService.resetPassword(payload);
-    });
+    return await authService.resetPassword(payload);
   };
 
   return {

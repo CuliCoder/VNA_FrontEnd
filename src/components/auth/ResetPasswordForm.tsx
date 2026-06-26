@@ -5,12 +5,14 @@ import { PasswordInput } from "@/components/common/PasswordInput";
 import { MESSAGES } from "@/constants/messages";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { PasswordStrengthMeter } from "@/components/common/PasswordStrengthMeter";
 
 export default function ResetPasswordForm({ email }: { email: string }) {
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmNewPassword, setConfirmNewPassword] = React.useState("");
   const [otp, setOtp] = React.useState("");
   const { resetPassword, forgotPassword, isLoading } = useAuth();
+
   // --- Countdown ---
   const OTP_SECONDS = 5 * 60;
   const [countdown, setCountdown] = React.useState(OTP_SECONDS);
@@ -57,14 +59,14 @@ export default function ResetPasswordForm({ email }: { email: string }) {
         newPassword,
         confirmNewPassword,
       });
-      if (res == null) {
-        toast.error(MESSAGES.COMMON.UNKNOWN_ERROR);
-        return;
-      }
       toast.success(res?.message || MESSAGES.AUTH.RESET_PASSWORD_SUCCESS);
       window.location.href = "/login";
-    } catch (err) {
-      const msg = (err as { message?: string })?.message ?? MESSAGES.COMMON.UNKNOWN_ERROR;
+    } catch (err:any) {
+      console.log(err?.data)
+      const rawMsg = (err as { message?: string | string[] })?.message;
+      const msg = Array.isArray(rawMsg) 
+        ? rawMsg.join(", ") 
+        : (rawMsg ?? MESSAGES.COMMON.UNKNOWN_ERROR);
       toast.error(msg);
     }
   };
@@ -81,16 +83,19 @@ export default function ResetPasswordForm({ email }: { email: string }) {
         <p>Bạn vui lòng kiểm tra và điền mã xác thực</p>
       </div>
 
-      <PasswordInput
-        label="Nhập mật khẩu mới"
-        placeholder="Nhập mật khẩu mới"
-        id="newPassword"
-        value={newPassword}
-        required
-        onChange={(e) => {
-          setNewPassword(e.target.value);
-        }}
-      />
+      <div>
+        <PasswordInput
+          label="Nhập mật khẩu mới"
+          placeholder="Nhập mật khẩu mới"
+          id="newPassword"
+          value={newPassword}
+          required
+          onChange={(e) => {
+            setNewPassword(e.target.value);
+          }}
+        />
+        <PasswordStrengthMeter password={newPassword} />
+      </div>
 
       <PasswordInput
         label="Xác nhận mật khẩu mới"
