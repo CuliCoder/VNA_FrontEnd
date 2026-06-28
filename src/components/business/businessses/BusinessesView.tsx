@@ -51,7 +51,7 @@ export default function BusinessesView() {
       setTotal(res.total);
     } catch (err) {
       console.error("Lỗi tải danh sách doanh nghiệp:", err);
-      // Fallback mock data để UI không trống khi dev
+  
 
     } finally {
       setIsLoading(false);

@@ -92,7 +92,7 @@ export const API_ENDPOINTS = {
     STATUS: (id: number) => `/report_periods/${id}/status`,
     
   }
-=======
+
 BUSINESS_FIELDS: {
    ROOT: "/business-fields", //get : lay danh sach nganh nghe kinh doanh, post : tao moi nganh nghe kinh doanh
   DETAIL: (id: number) => `/business-fields/${id}`, //patch : cap nhat nganh nghe kinh doanh, delete : xoa nganh nghe kinh doanh
