@@ -83,36 +83,32 @@ export const API_ENDPOINTS = {
     UPDATE: (id: number) => `/reports/${id}`,
     SUBMIT: (id: number) => `/reports/${id}/submit`,
     UPLOAD: (id: number) => `/reports/${id}/upload`,
+    EXPORT_WORD: (id: number) => `/reports/${id}/export`,
   },
 
   REPORT_PERIODS: {
 
-    ROOT: "/report_periods", //get : lay danh sach ky bao cao, post : tao moi ky bao cao
-    DETAIL: (id: number) => `/report_periods/${id}`, //get : lay thong tin chi tiet mot ki bao cao, post : cap nhat thong tin ki bao cao, delete : xoa ki bao cao
-    STATUS: (id: number) => `/report_periods/${id}/status`,
+    ROOT: "/report-periods", //get : lay danh sach ky bao cao, post : tao moi ky bao cao
+    DETAIL: (id: number) => `/report-periods/${id}`, //get : lay thong tin chi tiet mot ki bao cao, post : cap nhat thong tin ki bao cao, delete : xoa ki bao cao
+    STATUS: (id: number) => `/report-periods/${id}/status`,
     
+  }, 
+
+  CATEGORIES: {
+    ROOT: "/categories", //get : lay danh sach danh muc, post : tao moi danh muc
+    DETAIL: (id: number) => `/categories/${id}`, //get : lay thong tin chi tiet mot danh muc, patch : cap nhat thong tin danh muc, delete : xoa danh muc
+    EXPORT: "/categories/export", //get : xuat danh sach danh muc ra file excel
+    IMPORT: "/categories/import", //post : upload file excel danh sach danh muc, delete : xoa file excel dinh kem khoi supabase storage
+  },
+  
+  DEPARTMENTS_REPORT: {
+    LIST: "/department-reports", //get : API chính để hiển thị bảng báo cáo của các doanh nghiệp cho Role Sở (Quản lý/Admin). Hỗ trợ phân trang, tìm kiếm tự do theo Tên doanh nghiệp/Mã số thuế, và lọc theo Tỉnh, Phường/Xã, Năm, Kỳ báo cáo, Trạng thái.
+    BY_WARD: "/department-reports/statistics-by-ward", //get : API phục vụ bảng tổng hợp phân bố báo cáo theo đơn vị hành chính cấp Phường/Xã trực thuộc Tỉnh đã chọn. Yêu cầu bắt buộc truyền năm báo cáo (year) và mã Tỉnh (provinceId).
+    FILTER : "/department-reports/filter-options", //get : API phục vụ lấy dữ liệu nguồn để điền (populate) vào các ô chọn Dropdown trên giao diện lọc. Trả về mảng các năm hiện có trong database, danh sách các kỳ báo cáo và trạng thái kèm nhãn hiển thị tiếng Việt. Frontend nên gọi API này 1 lần duy nhất khi vừa tải trang.
+  },
+
+  SUMMARY_REPORTS: {
+    GENERAL : "/summary-reports/general-summary", //get : API phục vụ bảng tổng hợp báo cáo chung cho Role Sở (Quản lý/Admin). phần 1 thông tin tổng quan
+    ACCIDENT : "/summary-reports/accident-classified-summary", //get : API phục vụ bảng tổng hợp báo cáo chung cho Role Sở (Quản lý/Admin). phần 2 thông tin tai nạn lao động
   }
-
-BUSINESS_FIELDS: {
-   ROOT: "/business-fields", //get : lay danh sach nganh nghe kinh doanh, post : tao moi nganh nghe kinh doanh
-  DETAIL: (id: number) => `/business-fields/${id}`, //patch : cap nhat nganh nghe kinh doanh, delete : xoa nganh nghe kinh doanh
-  IMPORT: "/business-fields/import",
-},
-BUSINESS_TYPES: {
-   ROOT: "/business-types", //get : lay danh sach loai hinh kinh doanh, post : tao moi loai hinh kinh doanh
-  DETAIL: (id: number) => `/business-types/${id}`, //patch : cap nhat loai hinh kinh doanh, delete : xoa loai hinh kinh doanh
-  IMPORT: "/business-types/import",
-},
-REPORTS: {
-  CATEGORIES: "/reports/categories",
-  LIST: "/reports",
-  INIT: (periodId: number) => `/reports/period/${periodId}/init`,
-  DETAIL: (id: number) => `/reports/${id}`,
-  UPDATE: (id: number) => `/reports/${id}`,
-  SUBMIT: (id: number) => `/reports/${id}/submit`,
-  UPLOAD: (id: number) => `/reports/${id}/upload`,
-  EXPORT_WORD: (id: number) => `/reports/${id}/export-word`,
-}
->>>>>>> main
-
 } as const;
