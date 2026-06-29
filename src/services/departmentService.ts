@@ -1,7 +1,21 @@
 import apiClient from "@/lib/api";
 import { API_ENDPOINTS } from "@/constants/apiConfig";
 
-// ─── Interface khớp với response thực tế từ BE ──────────────────────────────
+// ─── Interface thực tế từ BE ──────────────────────────────
+export interface BulkApproveRequest {
+  reportIds: number[];
+}
+
+export interface RejectItem {
+  reportId: number;
+  note: string;
+}
+
+export interface BulkRejectRequest {
+  rejectItems: RejectItem[];
+}
+
+
 export interface DepartmentReportItem {
   reportId: number;
   enterpriseId: number;
@@ -32,12 +46,13 @@ export interface DepartmentFilterOptions {
 export interface DepartmentReportParams {
   current?: number;
   limit?: number;
-  search?: string;
   provinceId?: number;
   wardId?: number;
+  enterpriseName?: string;
+  taxCode?: string;
   year?: number;
   periodType?: "HALF_YEAR" | "YEAR";
-  status?: string;
+  status?: "REPORTING" | "SUBMITTED" | "APPROVED" | "REJECTED";
 }
 
 export interface GeneralSummaryResponse {
@@ -120,4 +135,28 @@ export const departmentService = {
     );
     return response.data;
   },
+
+  // Duyệt hàng loạt
+async bulkApprove(reportIds: number[]) {
+  const response = await apiClient.post(
+    API_ENDPOINTS.DEPARTMENTS_REPORT.BULK_APPROVE,
+    {
+      reportIds,
+    }
+  );
+
+  return response.data;
+},
+
+// Từ chối hàng loạt
+async bulkReject(rejectItems: { reportId: number; note: string }[]) {
+  const response = await apiClient.post(
+    API_ENDPOINTS.DEPARTMENTS_REPORT.BULK_REJECT,
+    {
+      rejectItems,
+    }
+  );
+
+  return response.data;
+},
 };
