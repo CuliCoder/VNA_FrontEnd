@@ -18,6 +18,7 @@ import { provincesService } from "@/services/provincesService";
 import { useToast } from "@/hooks/use-toast";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 
+import { Modal } from "@/components/common/Modal";
 interface Province {
   name: string;
   code: number;
@@ -90,8 +91,12 @@ export default function PeriodsViewPage() {
   // Inline table filters
   const [filterName, setFilterName] = useState("");
   const [filterTax, setFilterTax] = useState("");
-  const [filterPeriod, setFilterPeriod] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  const [filterPeriod, setFilterPeriod] = useState<
+    "HALF_YEAR" | "YEAR" | ""
+  >("");
+  const [filterStatus, setFilterStatus] = useState<
+    "REPORTING" | "SUBMITTED" | "APPROVED" | "REJECTED" | ""
+  >("");
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -102,7 +107,13 @@ export default function PeriodsViewPage() {
 
   const totalPagesComputed = Math.max(1, Math.ceil(total / limit));
 
+  //state checkbox 
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+
+  const [submitting, setSubmitting] = useState(false);
   // ─── Load initial filters & locations ───────────────────────────────────────
   useEffect(() => {
     // Load filter options
@@ -138,7 +149,97 @@ export default function PeriodsViewPage() {
       .catch(() => { })
       .finally(() => setLoadingWards(false));
   }, [selectedProvince]);
+  //hàm cho checkbox 
+  const selectableReports = reports.filter(
+    r => r.status === "SUBMITTED"
+  );
 
+  const isAllSelected =
+    selectableReports.length > 0 &&
+    selectableReports.every(r => selectedIds.has(r.reportId));
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+
+      if (next.has(id))
+        next.delete(id);
+      else
+        next.add(id);
+
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(
+        new Set(selectableReports.map(r => r.reportId))
+      );
+    }
+  };
+
+  // gọi api tiếp nhận/từ chối báo cáo
+  const handleBulkApprove = async () => {
+    try {
+      setSubmitting(true);
+
+      await departmentService.bulkApprove(
+        Array.from(selectedIds)
+      );
+
+      toast({
+        title: "Thành công",
+        description: "Đã tiếp nhận các báo cáo."
+      });
+
+      setSelectedIds(new Set());
+
+      fetchReports();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  const handleBulkReject = async () => {
+
+    if (!rejectReason.trim()) {
+      toast({
+        title: "Thiếu lý do",
+        description: "Vui lòng nhập lý do từ chối.",
+        variant: "destructive"
+      });
+
+      return;
+    }
+
+    try {
+
+      setSubmitting(true);
+
+      await departmentService.bulkReject(
+        Array.from(selectedIds).map(id => ({
+          reportId: id,
+          note: rejectReason
+        }))
+      );
+
+      toast({
+        title: "Thành công",
+        description: "Đã từ chối các báo cáo."
+      });
+
+      setShowRejectModal(false);
+      setRejectReason("");
+      setSelectedIds(new Set());
+
+      fetchReports();
+
+    } finally {
+      setSubmitting(false);
+    }
+  };
   // ─── Fetch List ─────────────────────────────────────────────────────────────
   const fetchReports = useCallback(async () => {
     try {
@@ -149,7 +250,8 @@ export default function PeriodsViewPage() {
         year: Number(year),
         provinceId: selectedProvince ? Number(selectedProvince) : undefined,
         wardId: selectedWard ? Number(selectedWard) : undefined,
-        search: (filterName || filterTax) ? `${filterName} ${filterTax}`.trim() : undefined,
+        enterpriseName: filterName.trim() || undefined,
+        taxCode: filterTax.trim() || undefined,
         periodType: filterPeriod || undefined,
         status: filterStatus || undefined,
       });
@@ -283,6 +385,7 @@ export default function PeriodsViewPage() {
 
       {/* 🟢 Table Card 🟢 */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col flex-1 overflow-hidden relative">
+
         <div className="flex-1 overflow-auto">
           <Table>
             <TableHeader>
@@ -290,8 +393,9 @@ export default function PeriodsViewPage() {
                 <TableHead className="w-12 text-center">
                   <input
                     type="checkbox"
+                    checked={isAllSelected}
+                    onChange={toggleSelectAll}
                     className="rounded border-gray-300 w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                    disabled
                   />
                 </TableHead>
                 <TableHead className="w-[100px] text-center">Thao tác</TableHead>
@@ -325,7 +429,12 @@ export default function PeriodsViewPage() {
                   <select
                     className="w-full text-xs border border-gray-200 rounded px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
                     value={filterPeriod}
-                    onChange={(e) => { setFilterPeriod(e.target.value); setPage(1); }}
+                    onChange={(e) => {
+                      setFilterPeriod(
+                        e.target.value as "" | "HALF_YEAR" | "YEAR"
+                      );
+                      setPage(1);
+                    }}
                   >
                     <option value="">Tất cả</option>
                     <option value="HALF_YEAR">6 tháng</option>
@@ -336,12 +445,24 @@ export default function PeriodsViewPage() {
                   <select
                     className="w-full text-xs border border-gray-200 rounded px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
                     value={filterStatus}
-                    onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
+                    onChange={(e) => {
+                      setFilterStatus(
+                        e.target.value as
+                        | ""
+                        | "REPORTING"
+                        | "SUBMITTED"
+                        | "APPROVED"
+                        | "REJECTED"
+                      );
+
+                      setPage(1);
+                    }}
                   >
                     <option value="">Tất cả</option>
-                    <option value="DRAFT">Đang báo cáo</option>
-                    <option value="SUBMITTED">Đã tiếp nhận</option>
-                    <option value="REJECTED">Bị trả lại</option>
+                    <option value="REPORTING">Đang báo cáo</option>
+                    <option value="REJECTED"> Từ chối</option>
+                    <option value="SUBMITTED">Chờ tiếp nhận</option>
+                    <option value="APPROVED">Đã tiếp nhận</option>
                   </select>
                 </TableCell>
               </TableRow>
@@ -377,8 +498,10 @@ export default function PeriodsViewPage() {
                       <TableCell className="text-center">
                         <input
                           type="checkbox"
+                          disabled={item.status !== "SUBMITTED"}
+                          checked={selectedIds.has(item.reportId)}
+                          onChange={() => toggleSelect(item.reportId)}
                           className="rounded border-gray-300 w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                          disabled
                         />
                       </TableCell>
                       <TableCell className="text-center">
@@ -412,6 +535,7 @@ export default function PeriodsViewPage() {
                 })
               )}
             </TableBody>
+
           </Table>
         </div>
 
@@ -428,7 +552,76 @@ export default function PeriodsViewPage() {
           />
         </div>
       </div>
+      {/* Reject Modal */}
+      <Modal
+        open={showRejectModal}
+        onClose={() => setShowRejectModal(false)}
+        title="Từ chối báo cáo"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setShowRejectModal(false)}
+            >
+              Hủy
+            </Button>
 
+            <Button
+              variant="danger"
+              onClick={handleBulkReject}
+              disabled={submitting}
+            >
+              Xác nhận
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-500 mb-3">
+          Lý do này sẽ được áp dụng cho tất cả {selectedIds.size} báo cáo đã chọn.
+        </p>
+
+        <textarea
+          className="w-full min-h-[120px] border rounded-md p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Nhập lý do từ chối..."
+          value={rejectReason}
+          onChange={(e) => setRejectReason(e.target.value)}
+        />
+
+      </Modal>
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <div className="flex items-center gap-3 rounded-xl border bg-white shadow-2xl px-4 py-3">
+
+            <span className="text-sm font-medium whitespace-nowrap">
+              Đã chọn {selectedIds.size} báo cáo
+            </span>
+
+            <Button
+              onClick={handleBulkApprove}
+              disabled={submitting}
+            >
+              Tiếp nhận
+            </Button>
+
+            <Button
+              variant="danger"
+              onClick={() => setShowRejectModal(true)}
+              disabled={submitting}
+            >
+              Từ chối
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => setSelectedIds(new Set())}
+            >
+              Bỏ chọn
+            </Button>
+
+          </div>
+
+        </div>
+      )}
     </div>
   );
 }

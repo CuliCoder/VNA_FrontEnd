@@ -91,8 +91,8 @@ export const API_ENDPOINTS = {
     ROOT: "/report-periods", //get : lay danh sach ky bao cao, post : tao moi ky bao cao
     DETAIL: (id: number) => `/report-periods/${id}`, //get : lay thong tin chi tiet mot ki bao cao, post : cap nhat thong tin ki bao cao, delete : xoa ki bao cao
     STATUS: (id: number) => `/report-periods/${id}/status`,
-    
-  }, 
+
+  },
 
   CATEGORIES: {
     ROOT: "/categories", //get : lay danh sach danh muc, post : tao moi danh muc
@@ -100,15 +100,17 @@ export const API_ENDPOINTS = {
     EXPORT: "/categories/export", //get : xuat danh sach danh muc ra file excel
     IMPORT: "/categories/import", //post : upload file excel danh sach danh muc, delete : xoa file excel dinh kem khoi supabase storage
   },
-  
+
   DEPARTMENTS_REPORT: {
     LIST: "/department-reports", //get : API chính để hiển thị bảng báo cáo của các doanh nghiệp cho Role Sở (Quản lý/Admin). Hỗ trợ phân trang, tìm kiếm tự do theo Tên doanh nghiệp/Mã số thuế, và lọc theo Tỉnh, Phường/Xã, Năm, Kỳ báo cáo, Trạng thái.
     BY_WARD: "/department-reports/statistics-by-ward", //get : API phục vụ bảng tổng hợp phân bố báo cáo theo đơn vị hành chính cấp Phường/Xã trực thuộc Tỉnh đã chọn. Yêu cầu bắt buộc truyền năm báo cáo (year) và mã Tỉnh (provinceId).
-    FILTER : "/department-reports/filter-options", //get : API phục vụ lấy dữ liệu nguồn để điền (populate) vào các ô chọn Dropdown trên giao diện lọc. Trả về mảng các năm hiện có trong database, danh sách các kỳ báo cáo và trạng thái kèm nhãn hiển thị tiếng Việt. Frontend nên gọi API này 1 lần duy nhất khi vừa tải trang.
+    FILTER: "/department-reports/filter-options", //get : API phục vụ lấy dữ liệu nguồn để điền (populate) vào các ô chọn Dropdown trên giao diện lọc. Trả về mảng các năm hiện có trong database, danh sách các kỳ báo cáo và trạng thái kèm nhãn hiển thị tiếng Việt. Frontend nên gọi API này 1 lần duy nhất khi vừa tải trang.
+    BULK_APPROVE: "/department-reports/bulk-approve", //post : duyệt hàng loạt báo cáo
+    BULK_REJECT: "/department-reports/bulk-reject"  ,//post : từ chối hàng loạt báo cáo
   },
 
   SUMMARY_REPORTS: {
-    GENERAL : "/summary-reports/general-summary", //get : API phục vụ bảng tổng hợp báo cáo chung cho Role Sở (Quản lý/Admin). phần 1 thông tin tổng quan
-    ACCIDENT : "/summary-reports/accident-classified-summary", //get : API phục vụ bảng tổng hợp báo cáo chung cho Role Sở (Quản lý/Admin). phần 2 thông tin tai nạn lao động
+    GENERAL: "/summary-reports/general-summary", //get : API phục vụ bảng tổng hợp báo cáo chung cho Role Sở (Quản lý/Admin). phần 1 thông tin tổng quan
+    ACCIDENT: "/summary-reports/accident-classified-summary", //get : API phục vụ bảng tổng hợp báo cáo chung cho Role Sở (Quản lý/Admin). phần 2 thông tin tai nạn lao động
   }
 } as const;
