@@ -104,7 +104,7 @@ export const SIDEBAR_MENUS: MenuItem[] = [
       },
       {
         title: "Kỳ báo cáo",
-        url: "/dashboard/periods",
+        url: "/dashboard/periods/periodsManagement",
         permissions: ["PERIOD_MANAGE"],
       },
     ],
@@ -121,7 +121,7 @@ export const SIDEBAR_MENUS: MenuItem[] = [
       },
       {
         title: "TNLD theo HĐLĐ",
-        url: "/dashboard/accidents",
+        url: "/dashboard/periods/periodsView",
         permissions: ["REPORT_MANAGE", "REPORT_VIEW"],
       },
     ],
