@@ -20,8 +20,33 @@ export default function AccidentOverview({
   onUploadFile,
   isReadOnly
 }: AccidentOverviewProps) {
-  const { categories, loading } = useReportCategories();
+  const { categories: apiCategories, loading } = useReportCategories();
   const [isUploading, setIsUploading] = React.useState(false);
+  
+  const fallbackCategories = React.useMemo(() => {
+    if (apiCategories) return null;
+    const accidentSection = reportData?.sections?.find((s: any) => s.sectionType === "ACCIDENT");
+    if (!accidentSection || !Array.isArray(accidentSection.accidentCases)) return null;
+
+    const causes: any[] = [];
+    const factors: any[] = [];
+    const jobs: any[] = [];
+
+    accidentSection.accidentCases.forEach((c: any) => {
+      if (c.accidentCause && !causes.find(x => x.id === c.accidentCause.id)) {
+        causes.push(c.accidentCause);
+      }
+      if (c.injuryFactor && !factors.find(x => x.id === c.injuryFactor.id)) {
+        factors.push(c.injuryFactor);
+      }
+      if (c.occupation && !jobs.find(x => x.id === c.occupation.id)) {
+        jobs.push(c.occupation);
+      }
+    });
+    return { accidentCauses: causes, injuryFactors: factors, occupations: jobs };
+  }, [apiCategories, reportData]);
+
+  const categories = apiCategories || fallbackCategories;
   
   const reportPeriodStr = reportData?.reportPeriod?.year 
     ? (reportData.reportPeriod.period === '6_MONTHS' ? `6 tháng năm ${reportData.reportPeriod.year}` : `năm ${reportData.reportPeriod.year}`)
