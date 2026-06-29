@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { reportService, ReportCategoriesResponse } from '@/services/reportService';
+import { categoryService } from '@/services/categoryService';
 import { useToast } from '@/hooks/use-toast';
 
 // Global cache to prevent multiple API calls
@@ -23,7 +24,27 @@ export const useReportCategories = () => {
       try {
         setLoading(true);
         if (!fetchPromise) {
-          fetchPromise = reportService.getCategories();
+          fetchPromise = (async () => {
+            try {
+              let res = await reportService.getCategories();
+              if (res && (res as any).data && (res as any).data.accidentCauses) {
+                return (res as any).data;
+              }
+              return res;
+            } catch (err: any) {
+              const allCats = await categoryService.getCategories();
+              const cats = Array.isArray(allCats) ? allCats : (allCats as any).data;
+              if (Array.isArray(cats)) {
+                return {
+                  accidentCauses: cats.filter(c => c.type === 'ACCIDENT_CAUSE'),
+                  injuryFactors: cats.filter(c => c.type === 'INJURY_FACTOR'),
+                  occupations: cats.filter(c => c.type === 'OCCUPATION'),
+                  injuryTypes: cats.filter(c => c.type === 'INJURY_TYPE'),
+                };
+              }
+              throw err;
+            }
+          })();
         }
         const data = await fetchPromise;
         if (mounted) {

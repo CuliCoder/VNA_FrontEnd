@@ -45,6 +45,10 @@ export default function DashboardLayout({
   };
 
   const checkAccessToPath = (path: string) => {
+    if (path.startsWith("/dashboard/accidents/") && (userPermissions.includes("REPORT_VIEW") || userPermissions.includes("REPORT_MANAGE"))) {
+      return true;
+    }
+    
     let matchingMenus: MenuItem[] = [];
     const findMenu = (menus: MenuItem[]) => {
       for (const menu of menus) {

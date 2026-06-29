@@ -3,60 +3,60 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Eye, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableRow, 
-  TableHead, 
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
   TableCell,
   Button,
-  Pagination 
+  Pagination
 } from "@/components/common";
 import { departmentService, DepartmentReportItem } from "@/services/departmentService";
 import { provincesService } from "@/services/provincesService";
 import { useToast } from "@/hooks/use-toast";
-import { SummaryReportModal } from "./_components/SummaryReportModal";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 
 interface Province {
   name: string;
-  id: number;
+  code: number;
 }
 
 interface Ward {
   name: string;
-  id: number;
+  code: number;
 }
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 function getStatusLabel(status: string, statusLabel?: string) {
   if (statusLabel) return statusLabel;
   switch (status) {
-    case "DRAFT":      return "Đang báo cáo";
-    case "SUBMITTED":  return "Đã nộp";
-    case "APPROVED":   return "Đã tiếp nhận";
-    case "REJECTED":   return "Bị trả lại";
-    default:           return "Chờ báo cáo";
+    case "DRAFT": return "Đang báo cáo";
+    case "SUBMITTED": return "Đã nộp";
+    case "APPROVED": return "Đã tiếp nhận";
+    case "REJECTED": return "Bị trả lại";
+    default: return "Chờ báo cáo";
   }
 }
 
 function getStatusColor(status: string) {
   switch (status) {
-    case "DRAFT":      return "text-gray-500";
-    case "SUBMITTED":  return "text-blue-500 font-medium";
-    case "APPROVED":   return "text-green-600 font-medium";
-    case "REJECTED":   return "text-red-600 font-medium";
-    default:           return "text-gray-400";
+    case "DRAFT": return "text-gray-500";
+    case "SUBMITTED": return "text-blue-500 font-medium";
+    case "APPROVED": return "text-green-600 font-medium";
+    case "REJECTED": return "text-red-600 font-medium";
+    default: return "text-gray-400";
   }
 }
 
 function getStatusDot(status: string) {
   switch (status) {
-    case "DRAFT":      return "bg-gray-400";
-    case "SUBMITTED":  return "bg-blue-500";
-    case "APPROVED":   return "bg-green-500";
-    case "REJECTED":   return "bg-red-500";
-    default:           return "bg-transparent border border-gray-300";
+    case "DRAFT": return "bg-gray-400";
+    case "SUBMITTED": return "bg-blue-500";
+    case "APPROVED": return "bg-green-500";
+    case "REJECTED": return "bg-red-500";
+    default: return "bg-transparent border border-gray-300";
   }
 }
 
@@ -68,7 +68,7 @@ export default function PeriodsViewPage() {
 
   // Filter options from API
   const [availableYears, setAvailableYears] = useState<number[]>([currentYear]);
-  
+
   // Active filters
   const [year, setYear] = useState<string>(currentYear.toString());
   const [selectedProvince, setSelectedProvince] = useState<string>("");
@@ -116,12 +116,12 @@ export default function PeriodsViewPage() {
           }
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     // Load provinces
     provincesService.getProvinces()
       .then(setProvinces)
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoadingProvinces(false));
   }, []);
 
@@ -135,7 +135,7 @@ export default function PeriodsViewPage() {
     setLoadingWards(true);
     provincesService.getWards(Number(selectedProvince))
       .then(setWards)
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoadingWards(false));
   }, [selectedProvince]);
 
@@ -166,6 +166,9 @@ export default function PeriodsViewPage() {
         });
       }
     } catch (err: any) {
+      setReports([]);
+      setTotal(0);
+      setTotalPages(1);
       toast({
         title: "Lỗi tải báo cáo",
         description: "Không thể lấy danh sách báo cáo từ hệ thống.",
@@ -182,7 +185,17 @@ export default function PeriodsViewPage() {
 
   // ─── Open Summary Report Modal ──────────────────────────────────────────────
   const handleOpenSummary = () => {
-    setShowSummary(true);
+    let url = `/dashboard/periods/summary?year=${year}`;
+
+    if (selectedProvince) {
+      url += `&provinceId=${selectedProvince}`;
+    }
+
+    if (selectedWard) {
+      url += `&wardId=${selectedWard}`;
+    }
+
+    router.push(url);
   };
 
 
@@ -225,7 +238,7 @@ export default function PeriodsViewPage() {
               >
                 <option value="">Tất cả Tỉnh/Thành</option>
                 {provinces.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <option key={p.code} value={p.code}>{p.name}</option>
                 ))}
               </select>
               <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -241,7 +254,7 @@ export default function PeriodsViewPage() {
               >
                 <option value="">Tất cả Phường/Xã</option>
                 {wards.map((w) => (
-                  <option key={w.id} value={w.id}>{w.name}</option>
+                  <option key={w.code} value={w.code}>{w.name}</option>
                 ))}
               </select>
               <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -249,10 +262,22 @@ export default function PeriodsViewPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mt-1">
-          <Button variant="primary" size="sm" onClick={handleOpenSummary}>
+        <div className="mt-1 flex flex-col items-start gap-1">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleOpenSummary}
+            disabled={!selectedProvince}
+            className="disabled:cursor-not-allowed disabled:opacity-50"
+          >
             Báo cáo tổng hợp
           </Button>
+
+          {!selectedProvince && (
+            <span className="text-xs text-red-500">
+              Vui lòng chọn tỉnh/thành phố.
+            </span>
+          )}
         </div>
       </div>
 
@@ -344,8 +369,8 @@ export default function PeriodsViewPage() {
                     item.periodType === "YEAR"
                       ? "Cả năm"
                       : item.periodType === "HALF_YEAR"
-                      ? "6 tháng"
-                      : item.periodType;
+                        ? "6 tháng"
+                        : item.periodType;
 
                   return (
                     <TableRow key={item.reportId} className="group">
@@ -404,13 +429,6 @@ export default function PeriodsViewPage() {
         </div>
       </div>
 
-      <SummaryReportModal
-        open={showSummary}
-        year={Number(year)}
-        provinceId={selectedProvince ? Number(selectedProvince) : undefined}
-        wardId={selectedWard ? Number(selectedWard) : undefined}
-        onClose={() => setShowSummary(false)}
-      />
     </div>
   );
 }

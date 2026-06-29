@@ -106,7 +106,7 @@ export default function ReportConfigPage() {
     };
 
     if (filterYear) params.year = Number(filterYear);
-    if (filterName) params.reportName = filterName;
+    if (filterName) params.search = filterName;
     if (filterPeriod) params.periodType = filterPeriod as "HALF_YEAR" | "YEAR";
     if (filterStatus) params.status = filterStatus as "OPEN" | "CLOSED";
     if (filterStartDate) params.startDate = toDDMMYYYY(filterStartDate);
@@ -118,6 +118,9 @@ export default function ReportConfigPage() {
     setTotal(result.total);
     setTotalPages(result.totalPages);
   } catch (err) {
+    setData([]);
+    setTotal(0);
+    setTotalPages(1);
     toast({
       title: "Lỗi",
       description: "Không thể tải danh sách kỳ báo cáo",

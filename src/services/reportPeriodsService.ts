@@ -31,7 +31,7 @@ export interface UpdateReportPeriodDto
 
 export interface GetReportPeriodsParams {
   year?: number;
-  reportName?: string;
+  search?: string;
   periodType?: "HALF_YEAR" | "YEAR";
   status?: "OPEN" | "CLOSED"
   startDate?: string;
