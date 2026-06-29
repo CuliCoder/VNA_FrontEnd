@@ -116,7 +116,7 @@ export function EnterpriseAccidentView() {
           ) : (
             paginatedData.map((item) => {
               const status = item.report ? item.report.status : null;
-              const isDraft = status === "DRAFT";
+              const isDraft = status === "REPORTING";
               return (
                 <TableRow key={item.period.id}>
                   <TableCell>
@@ -150,23 +150,23 @@ export function EnterpriseAccidentView() {
                   <TableCell className="font-medium text-gray-800">{enterpriseName}</TableCell>
                   <TableCell className="text-gray-600">{taxCode}</TableCell>
                   <TableCell className="text-gray-700">
-                    {item.period.periodType === "SIX_MONTH" ? "6 tháng" : "Cả năm"}
+                    {item.period.periodType === "HALF_YEAR" ? "6 tháng" : "Cả năm"}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${
-                        status === "DRAFT" ? "bg-gray-400" :
+                        status === "REPORTING" ? "bg-gray-400" :
                         status === "SUBMITTED" ? "bg-blue-500" :
                         status === "REJECTED" ? "bg-red-500" :
                         "bg-transparent border border-gray-300"
                       }`} />
                       <span className={`text-sm ${
-                        status === "DRAFT" ? "text-gray-500" :
+                        status === "REPORTING" ? "text-gray-500" :
                         status === "SUBMITTED" ? "text-blue-600 font-medium" :
                         status === "REJECTED" ? "text-red-600 font-medium" :
                         "text-gray-400"
                       }`}>
-                        {status === "DRAFT" ? "Đang báo cáo" :
+                        {status === "REPORTING" ? "Đang báo cáo" :
                          status === "SUBMITTED" ? "Đã tiếp nhận" :
                          status === "REJECTED" ? "Bị trả lại (cần sửa và nộp lại)" :
                          "Chờ báo cáo (chưa khởi tạo)"}
