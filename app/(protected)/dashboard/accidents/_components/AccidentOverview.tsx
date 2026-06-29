@@ -108,7 +108,7 @@ export default function AccidentOverview({
               return (
                 <tr key={`child-${child.id}`} className="bg-white">
                   <td className="border border-gray-200 p-2 pl-8">{child.name}</td>
-                  <td className="border border-gray-200 p-2 text-center">{child.id}</td>
+                  <td className="border border-gray-200 p-2 text-center">{child.code}</td>
                   {rowValues.map((v, i) => <td key={i} className="border border-gray-200 p-2 text-center">{v}</td>)}
                 </tr>
               );
@@ -127,7 +127,7 @@ export default function AccidentOverview({
       return (
         <tr key={`${type}-${item.id}`} className="bg-white">
           <td className="border border-gray-200 p-2 pl-8">{item.name}</td>
-          <td className="border border-gray-200 p-2 text-center">{item.id}</td>
+          <td className="border border-gray-200 p-2 text-center">{item.code}</td>
           {rowValues.map((v, i) => <td key={i} className="border border-gray-200 p-2 text-center">{v}</td>)}
         </tr>
       );
@@ -235,7 +235,7 @@ export default function AccidentOverview({
 
             <tr className="font-bold bg-white">
               <td className="border border-gray-200 p-3">2. Tai nạn được hưởng trợ cấp theo quy định tại Khoản 2 Điều 39 Luật ATVSLĐ</td>
-              <td className="border border-gray-200 p-3 text-center">10</td>
+              <td className="border border-gray-200 p-3 text-center"></td>
               {accident2Row.map((v, i) => <td key={i} className="border border-gray-200 p-3 text-center">{v}</td>)}
             </tr>
 
