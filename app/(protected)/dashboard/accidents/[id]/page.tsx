@@ -148,11 +148,23 @@ export default function ReportDeclarationPage() {
       let sumDetailAccidents = 0;
       let sumDetailVictims = 0;
       let sumDetailUnmanagedVictims = 0;
+      let sumDetailMedicalCost = 0;
+      let sumDetailSalaryCost = 0;
+      let sumDetailCompensationCost = 0;
+      let sumDetailTotalCost = 0;
+      let sumDetailPropertyDamage = 0;
+      let sumDetailLeaveDays = 0;
 
       accident1DetailData.forEach((detail, index) => {
         sumDetailAccidents += Number(detail.summary.totalAccidents) || 0;
         sumDetailVictims += Number(detail.summary.totalVictims) || 0;
         sumDetailUnmanagedVictims += Number(detail.summary.unmanagedVictims) || 0;
+        sumDetailMedicalCost += Number(detail.summary.medicalCost) || 0;
+        sumDetailSalaryCost += Number(detail.summary.salaryCost) || 0;
+        sumDetailCompensationCost += Number(detail.summary.compensationCost) || 0;
+        sumDetailTotalCost += Number(detail.summary.totalCost) || 0;
+        sumDetailPropertyDamage += Number(detail.summary.propertyDamage) || 0;
+        sumDetailLeaveDays += Number(detail.summary.leaveDays) || 0;
         const errs: any = validateAccidentSummary(detail.summary);
         if (!detail.cause) errs.cause = "Vui lòng chọn nguyên nhân";
         if (!detail.factor) errs.factor = "Vui lòng chọn yếu tố";
@@ -166,13 +178,25 @@ export default function ReportDeclarationPage() {
       const isNotEqual = sumDetailAccidents !== (Number(accident1SummaryData.totalAccidents) || 0);
       const isVictimsNotEqual = sumDetailVictims !== (Number(accident1SummaryData.totalVictims) || 0);
       const isUnmanagedNotEqual = sumDetailUnmanagedVictims !== (Number(accident1SummaryData.unmanagedVictims) || 0);
-      const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual) && accident1DetailData.length > 0;
+      const isMedicalCostNotEqual = sumDetailMedicalCost !== (Number(accident1SummaryData.medicalCost) || 0);
+      const isSalaryCostNotEqual = sumDetailSalaryCost !== (Number(accident1SummaryData.salaryCost) || 0);
+      const isCompensationCostNotEqual = sumDetailCompensationCost !== (Number(accident1SummaryData.compensationCost) || 0);
+      const isTotalCostNotEqual = sumDetailTotalCost !== (Number(accident1SummaryData.totalCost) || 0);
+      const isPropertyDamageNotEqual = sumDetailPropertyDamage !== (Number(accident1SummaryData.propertyDamage) || 0);
+      const isLeaveDaysNotEqual = sumDetailLeaveDays !== (Number(accident1SummaryData.leaveDays) || 0);
+      const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual || isMedicalCostNotEqual || isSalaryCostNotEqual || isCompensationCostNotEqual || isTotalCostNotEqual || isPropertyDamageNotEqual || isLeaveDaysNotEqual) && accident1DetailData.length > 0;
       
       if (hasSumError) {
         detailErrsList.forEach(errs => {
           if (isNotEqual && !errs.totalAccidents) errs.totalAccidents = "Tổng số vụ không khớp với mục (1)";
           if (isVictimsNotEqual && !errs.totalVictims) errs.totalVictims = "Tổng số người không khớp với mục (1)";
           if (isUnmanagedNotEqual && !errs.unmanagedVictims) errs.unmanagedVictims = "Không khớp với mục (1)";
+          if (isMedicalCostNotEqual && !errs.medicalCost) errs.medicalCost = "Không khớp với mục (1)";
+          if (isSalaryCostNotEqual && !errs.salaryCost) errs.salaryCost = "Không khớp với mục (1)";
+          if (isCompensationCostNotEqual && !errs.compensationCost) errs.compensationCost = "Không khớp với mục (1)";
+          if (isTotalCostNotEqual && !errs.totalCost) errs.totalCost = "Không khớp với mục (1)";
+          if (isPropertyDamageNotEqual && !errs.propertyDamage) errs.propertyDamage = "Không khớp với mục (1)";
+          if (isLeaveDaysNotEqual && !errs.leaveDays) errs.leaveDays = "Không khớp với mục (1)";
         });
         hasDetailErrs = true;
       }
@@ -182,9 +206,9 @@ export default function ReportDeclarationPage() {
 
       if (Object.keys(summary1Errs).length > 0 || hasDetailErrs) {
         if (hasSumError) {
-          toast.error("Tổng số vụ/số người bị nạn ở mục (2) không khớp với mục (1)");
+          toast.error("Dữ liệu tổng cộng (số vụ, nạn nhân, chi phí,...) ở mục (2) không khớp với mục (1)");
         }
-        const hasOtherDetailErrs = detailErrsList.some(e => Object.keys(e).some(k => !['totalAccidents', 'totalVictims', 'unmanagedVictims'].includes(k) || (e[k] !== "Tổng số vụ không khớp với mục (1)" && e[k] !== "Tổng số người không khớp với mục (1)" && e[k] !== "Không khớp với mục (1)")));
+        const hasOtherDetailErrs = detailErrsList.some(e => Object.keys(e).some(k => !['totalAccidents', 'totalVictims', 'unmanagedVictims', 'medicalCost', 'salaryCost', 'compensationCost', 'totalCost', 'propertyDamage', 'leaveDays'].includes(k) || (e[k] !== "Tổng số vụ không khớp với mục (1)" && e[k] !== "Tổng số người không khớp với mục (1)" && e[k] !== "Không khớp với mục (1)")));
         if (!hasSumError || Object.keys(summary1Errs).length > 0 || hasOtherDetailErrs) {
           toast.error("Vui lòng kiểm tra lại thông tin các vụ tai nạn lao động tại Mục 1");
         }
@@ -410,11 +434,23 @@ export default function ReportDeclarationPage() {
         let sumDetailAccidents = 0;
         let sumDetailVictims = 0;
         let sumDetailUnmanagedVictims = 0;
+      let sumDetailMedicalCost = 0;
+      let sumDetailSalaryCost = 0;
+      let sumDetailCompensationCost = 0;
+      let sumDetailTotalCost = 0;
+      let sumDetailPropertyDamage = 0;
+      let sumDetailLeaveDays = 0;
 
         accident1DetailData.forEach((detail, index) => {
           sumDetailAccidents += Number(detail.summary.totalAccidents) || 0;
           sumDetailVictims += Number(detail.summary.totalVictims) || 0;
           sumDetailUnmanagedVictims += Number(detail.summary.unmanagedVictims) || 0;
+        sumDetailMedicalCost += Number(detail.summary.medicalCost) || 0;
+        sumDetailSalaryCost += Number(detail.summary.salaryCost) || 0;
+        sumDetailCompensationCost += Number(detail.summary.compensationCost) || 0;
+        sumDetailTotalCost += Number(detail.summary.totalCost) || 0;
+        sumDetailPropertyDamage += Number(detail.summary.propertyDamage) || 0;
+        sumDetailLeaveDays += Number(detail.summary.leaveDays) || 0;
           const errs: any = validateAccidentSummary(detail.summary);
           if (!detail.cause) errs.cause = "Vui lòng chọn nguyên nhân";
           if (!detail.factor) errs.factor = "Vui lòng chọn yếu tố";
@@ -428,13 +464,25 @@ export default function ReportDeclarationPage() {
         const isNotEqual = sumDetailAccidents !== (Number(accident1SummaryData.totalAccidents) || 0);
         const isVictimsNotEqual = sumDetailVictims !== (Number(accident1SummaryData.totalVictims) || 0);
         const isUnmanagedNotEqual = sumDetailUnmanagedVictims !== (Number(accident1SummaryData.unmanagedVictims) || 0);
-        const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual) && accident1DetailData.length > 0;
+        const isMedicalCostNotEqual = sumDetailMedicalCost !== (Number(accident1SummaryData.medicalCost) || 0);
+      const isSalaryCostNotEqual = sumDetailSalaryCost !== (Number(accident1SummaryData.salaryCost) || 0);
+      const isCompensationCostNotEqual = sumDetailCompensationCost !== (Number(accident1SummaryData.compensationCost) || 0);
+      const isTotalCostNotEqual = sumDetailTotalCost !== (Number(accident1SummaryData.totalCost) || 0);
+      const isPropertyDamageNotEqual = sumDetailPropertyDamage !== (Number(accident1SummaryData.propertyDamage) || 0);
+      const isLeaveDaysNotEqual = sumDetailLeaveDays !== (Number(accident1SummaryData.leaveDays) || 0);
+      const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual || isMedicalCostNotEqual || isSalaryCostNotEqual || isCompensationCostNotEqual || isTotalCostNotEqual || isPropertyDamageNotEqual || isLeaveDaysNotEqual) && accident1DetailData.length > 0;
         
         if (hasSumError) {
           detailErrsList.forEach(errs => {
             if (isNotEqual && !errs.totalAccidents) errs.totalAccidents = "Tổng số vụ không khớp với mục (1)";
             if (isVictimsNotEqual && !errs.totalVictims) errs.totalVictims = "Tổng số người không khớp với mục (1)";
             if (isUnmanagedNotEqual && !errs.unmanagedVictims) errs.unmanagedVictims = "Không khớp với mục (1)";
+            if (isMedicalCostNotEqual && !errs.medicalCost) errs.medicalCost = "Không khớp với mục (1)";
+            if (isSalaryCostNotEqual && !errs.salaryCost) errs.salaryCost = "Không khớp với mục (1)";
+            if (isCompensationCostNotEqual && !errs.compensationCost) errs.compensationCost = "Không khớp với mục (1)";
+            if (isTotalCostNotEqual && !errs.totalCost) errs.totalCost = "Không khớp với mục (1)";
+            if (isPropertyDamageNotEqual && !errs.propertyDamage) errs.propertyDamage = "Không khớp với mục (1)";
+            if (isLeaveDaysNotEqual && !errs.leaveDays) errs.leaveDays = "Không khớp với mục (1)";
           });
           hasDetailErrs = true;
         }
@@ -444,9 +492,9 @@ export default function ReportDeclarationPage() {
 
         if (Object.keys(summary1Errs).length > 0 || hasDetailErrs) {
           if (hasSumError) {
-            toast.error("Tổng số vụ/số người bị nạn ở mục (2) không khớp với mục (1)");
+            toast.error("Dữ liệu tổng cộng (số vụ, nạn nhân, chi phí,...) ở mục (2) không khớp với mục (1)");
           }
-          const hasOtherDetailErrs = detailErrsList.some(e => Object.keys(e).some(k => !['totalAccidents', 'totalVictims', 'unmanagedVictims'].includes(k) || (e[k] !== "Tổng số vụ không khớp với mục (1)" && e[k] !== "Tổng số người không khớp với mục (1)" && e[k] !== "Không khớp với mục (1)")));
+          const hasOtherDetailErrs = detailErrsList.some(e => Object.keys(e).some(k => !['totalAccidents', 'totalVictims', 'unmanagedVictims', 'medicalCost', 'salaryCost', 'compensationCost', 'totalCost', 'propertyDamage', 'leaveDays'].includes(k) || (e[k] !== "Tổng số vụ không khớp với mục (1)" && e[k] !== "Tổng số người không khớp với mục (1)" && e[k] !== "Không khớp với mục (1)")));
           if (!hasSumError || Object.keys(summary1Errs).length > 0 || hasOtherDetailErrs) {
             toast.error("Vui lòng kiểm tra lại thông tin các vụ tai nạn lao động tại Mục 1");
           }
@@ -479,11 +527,23 @@ export default function ReportDeclarationPage() {
           let sumDetailAccidents = 0;
           let sumDetailVictims = 0;
           let sumDetailUnmanagedVictims = 0;
+      let sumDetailMedicalCost = 0;
+      let sumDetailSalaryCost = 0;
+      let sumDetailCompensationCost = 0;
+      let sumDetailTotalCost = 0;
+      let sumDetailPropertyDamage = 0;
+      let sumDetailLeaveDays = 0;
 
           accident1DetailData.forEach((detail, index) => {
             sumDetailAccidents += Number(detail.summary.totalAccidents) || 0;
             sumDetailVictims += Number(detail.summary.totalVictims) || 0;
             sumDetailUnmanagedVictims += Number(detail.summary.unmanagedVictims) || 0;
+        sumDetailMedicalCost += Number(detail.summary.medicalCost) || 0;
+        sumDetailSalaryCost += Number(detail.summary.salaryCost) || 0;
+        sumDetailCompensationCost += Number(detail.summary.compensationCost) || 0;
+        sumDetailTotalCost += Number(detail.summary.totalCost) || 0;
+        sumDetailPropertyDamage += Number(detail.summary.propertyDamage) || 0;
+        sumDetailLeaveDays += Number(detail.summary.leaveDays) || 0;
             const errs: any = validateAccidentSummary(detail.summary);
             if (!detail.cause) errs.cause = "Vui lòng chọn nguyên nhân";
             if (!detail.factor) errs.factor = "Vui lòng chọn yếu tố";
@@ -497,13 +557,25 @@ export default function ReportDeclarationPage() {
           const isNotEqual = sumDetailAccidents !== (Number(accident1SummaryData.totalAccidents) || 0);
           const isVictimsNotEqual = sumDetailVictims !== (Number(accident1SummaryData.totalVictims) || 0);
           const isUnmanagedNotEqual = sumDetailUnmanagedVictims !== (Number(accident1SummaryData.unmanagedVictims) || 0);
-          const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual) && accident1DetailData.length > 0;
+          const isMedicalCostNotEqual = sumDetailMedicalCost !== (Number(accident1SummaryData.medicalCost) || 0);
+      const isSalaryCostNotEqual = sumDetailSalaryCost !== (Number(accident1SummaryData.salaryCost) || 0);
+      const isCompensationCostNotEqual = sumDetailCompensationCost !== (Number(accident1SummaryData.compensationCost) || 0);
+      const isTotalCostNotEqual = sumDetailTotalCost !== (Number(accident1SummaryData.totalCost) || 0);
+      const isPropertyDamageNotEqual = sumDetailPropertyDamage !== (Number(accident1SummaryData.propertyDamage) || 0);
+      const isLeaveDaysNotEqual = sumDetailLeaveDays !== (Number(accident1SummaryData.leaveDays) || 0);
+      const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual || isMedicalCostNotEqual || isSalaryCostNotEqual || isCompensationCostNotEqual || isTotalCostNotEqual || isPropertyDamageNotEqual || isLeaveDaysNotEqual) && accident1DetailData.length > 0;
           
           if (hasSumError) {
             detailErrsList.forEach(errs => {
               if (isNotEqual && !errs.totalAccidents) errs.totalAccidents = "Tổng số vụ không khớp với mục (1)";
               if (isVictimsNotEqual && !errs.totalVictims) errs.totalVictims = "Tổng số người không khớp với mục (1)";
               if (isUnmanagedNotEqual && !errs.unmanagedVictims) errs.unmanagedVictims = "Không khớp với mục (1)";
+              if (isMedicalCostNotEqual && !errs.medicalCost) errs.medicalCost = "Không khớp với mục (1)";
+              if (isSalaryCostNotEqual && !errs.salaryCost) errs.salaryCost = "Không khớp với mục (1)";
+              if (isCompensationCostNotEqual && !errs.compensationCost) errs.compensationCost = "Không khớp với mục (1)";
+              if (isTotalCostNotEqual && !errs.totalCost) errs.totalCost = "Không khớp với mục (1)";
+              if (isPropertyDamageNotEqual && !errs.propertyDamage) errs.propertyDamage = "Không khớp với mục (1)";
+              if (isLeaveDaysNotEqual && !errs.leaveDays) errs.leaveDays = "Không khớp với mục (1)";
             });
             hasDetailErrs = true;
           }
@@ -513,9 +585,9 @@ export default function ReportDeclarationPage() {
 
           if (Object.keys(summaryErrs).length > 0 || hasDetailErrs) {
             if (hasSumError) {
-              toast.error("Tổng số vụ/số người bị nạn ở mục (2) không khớp với mục (1)");
+              toast.error("Dữ liệu tổng cộng (số vụ, nạn nhân, chi phí,...) ở mục (2) không khớp với mục (1)");
             }
-            const hasOtherDetailErrs = detailErrsList.some(e => Object.keys(e).some(k => !['totalAccidents', 'totalVictims', 'unmanagedVictims'].includes(k) || (e[k] !== "Tổng số vụ không khớp với mục (1)" && e[k] !== "Tổng số người không khớp với mục (1)" && e[k] !== "Không khớp với mục (1)")));
+            const hasOtherDetailErrs = detailErrsList.some(e => Object.keys(e).some(k => !['totalAccidents', 'totalVictims', 'unmanagedVictims', 'medicalCost', 'salaryCost', 'compensationCost', 'totalCost', 'propertyDamage', 'leaveDays'].includes(k) || (e[k] !== "Tổng số vụ không khớp với mục (1)" && e[k] !== "Tổng số người không khớp với mục (1)" && e[k] !== "Không khớp với mục (1)")));
             if (!hasSumError || Object.keys(summaryErrs).length > 0 || hasOtherDetailErrs) {
               toast.error("Vui lòng kiểm tra lại thông tin các vụ tai nạn lao động tại Mục 1");
             }
@@ -556,11 +628,23 @@ export default function ReportDeclarationPage() {
       let sumDetailAccidents = 0;
       let sumDetailVictims = 0;
       let sumDetailUnmanagedVictims = 0;
+      let sumDetailMedicalCost = 0;
+      let sumDetailSalaryCost = 0;
+      let sumDetailCompensationCost = 0;
+      let sumDetailTotalCost = 0;
+      let sumDetailPropertyDamage = 0;
+      let sumDetailLeaveDays = 0;
 
       accident1DetailData.forEach((detail, index) => {
         sumDetailAccidents += Number(detail.summary.totalAccidents) || 0;
         sumDetailVictims += Number(detail.summary.totalVictims) || 0;
         sumDetailUnmanagedVictims += Number(detail.summary.unmanagedVictims) || 0;
+        sumDetailMedicalCost += Number(detail.summary.medicalCost) || 0;
+        sumDetailSalaryCost += Number(detail.summary.salaryCost) || 0;
+        sumDetailCompensationCost += Number(detail.summary.compensationCost) || 0;
+        sumDetailTotalCost += Number(detail.summary.totalCost) || 0;
+        sumDetailPropertyDamage += Number(detail.summary.propertyDamage) || 0;
+        sumDetailLeaveDays += Number(detail.summary.leaveDays) || 0;
         const errs: any = validateAccidentSummary(detail.summary);
         if (!detail.cause) errs.cause = "Vui lòng chọn nguyên nhân";
         if (!detail.factor) errs.factor = "Vui lòng chọn yếu tố";
@@ -576,13 +660,25 @@ export default function ReportDeclarationPage() {
       const isNotEqual = sumDetailAccidents !== (Number(accident1SummaryData.totalAccidents) || 0);
       const isVictimsNotEqual = sumDetailVictims !== (Number(accident1SummaryData.totalVictims) || 0);
       const isUnmanagedNotEqual = sumDetailUnmanagedVictims !== (Number(accident1SummaryData.unmanagedVictims) || 0);
-      const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual) && accident1DetailData.length > 0;
+      const isMedicalCostNotEqual = sumDetailMedicalCost !== (Number(accident1SummaryData.medicalCost) || 0);
+      const isSalaryCostNotEqual = sumDetailSalaryCost !== (Number(accident1SummaryData.salaryCost) || 0);
+      const isCompensationCostNotEqual = sumDetailCompensationCost !== (Number(accident1SummaryData.compensationCost) || 0);
+      const isTotalCostNotEqual = sumDetailTotalCost !== (Number(accident1SummaryData.totalCost) || 0);
+      const isPropertyDamageNotEqual = sumDetailPropertyDamage !== (Number(accident1SummaryData.propertyDamage) || 0);
+      const isLeaveDaysNotEqual = sumDetailLeaveDays !== (Number(accident1SummaryData.leaveDays) || 0);
+      const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual || isMedicalCostNotEqual || isSalaryCostNotEqual || isCompensationCostNotEqual || isTotalCostNotEqual || isPropertyDamageNotEqual || isLeaveDaysNotEqual) && accident1DetailData.length > 0;
       
       if (hasSumError) {
         detailErrsList.forEach(errs => {
           if (isNotEqual && !errs.totalAccidents) errs.totalAccidents = "Tổng số vụ không khớp với mục (1)";
           if (isVictimsNotEqual && !errs.totalVictims) errs.totalVictims = "Tổng số người không khớp với mục (1)";
           if (isUnmanagedNotEqual && !errs.unmanagedVictims) errs.unmanagedVictims = "Không khớp với mục (1)";
+          if (isMedicalCostNotEqual && !errs.medicalCost) errs.medicalCost = "Không khớp với mục (1)";
+          if (isSalaryCostNotEqual && !errs.salaryCost) errs.salaryCost = "Không khớp với mục (1)";
+          if (isCompensationCostNotEqual && !errs.compensationCost) errs.compensationCost = "Không khớp với mục (1)";
+          if (isTotalCostNotEqual && !errs.totalCost) errs.totalCost = "Không khớp với mục (1)";
+          if (isPropertyDamageNotEqual && !errs.propertyDamage) errs.propertyDamage = "Không khớp với mục (1)";
+          if (isLeaveDaysNotEqual && !errs.leaveDays) errs.leaveDays = "Không khớp với mục (1)";
         });
         hasDetailErrs = true;
       }
@@ -592,9 +688,9 @@ export default function ReportDeclarationPage() {
 
       if (Object.keys(summaryErrs).length > 0 || hasDetailErrs) {
         if (hasSumError) {
-          toast.error("Tổng số vụ/số người bị nạn ở mục (2) không khớp với mục (1)");
+          toast.error("Dữ liệu tổng cộng (số vụ, nạn nhân, chi phí,...) ở mục (2) không khớp với mục (1)");
         }
-        const hasOtherDetailErrs = detailErrsList.some(e => Object.keys(e).some(k => !['totalAccidents', 'totalVictims', 'unmanagedVictims'].includes(k) || (e[k] !== "Tổng số vụ không khớp với mục (1)" && e[k] !== "Tổng số người không khớp với mục (1)" && e[k] !== "Không khớp với mục (1)")));
+        const hasOtherDetailErrs = detailErrsList.some(e => Object.keys(e).some(k => !['totalAccidents', 'totalVictims', 'unmanagedVictims', 'medicalCost', 'salaryCost', 'compensationCost', 'totalCost', 'propertyDamage', 'leaveDays'].includes(k) || (e[k] !== "Tổng số vụ không khớp với mục (1)" && e[k] !== "Tổng số người không khớp với mục (1)" && e[k] !== "Không khớp với mục (1)")));
         if (!hasSumError || Object.keys(summaryErrs).length > 0 || hasOtherDetailErrs) {
           toast.error("Vui lòng nhập đầy đủ và chính xác thông tin các vụ tai nạn");
         }
