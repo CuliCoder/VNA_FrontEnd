@@ -286,6 +286,7 @@ export default function ReportConfigPage() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col flex-1 overflow-hidden relative">
         {/* Table */}
         <div className="flex-1 overflow-auto">
+          
           <Table>
             <TableHeader>
               <TableRow>
@@ -417,7 +418,9 @@ export default function ReportConfigPage() {
                 ))
               )}
             </TableBody>
+            
           </Table>
+          
         </div>
 
         {/* 🟢 Footer / Pagination 🟢 */}
