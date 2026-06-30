@@ -55,7 +55,7 @@ export function EnterpriseAccidentView() {
       const report = await reportService.initReport(periodId);
       router.push(`/dashboard/accidents/${report.id}`);
     } catch (error) {
-       toast({
+      toast({
         title: "Lỗi",
         description: "Không thể khởi tạo báo cáo",
         variant: "destructive",
@@ -75,8 +75,8 @@ export function EnterpriseAccidentView() {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-semibold text-gray-800">Báo cáo định kỳ Tai nạn lao động</h1>
-        <select 
-          value={year} 
+        <select
+          value={year}
           onChange={(e) => setYear(e.target.value)}
           className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
@@ -95,90 +95,91 @@ export function EnterpriseAccidentView() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col flex-1 overflow-hidden relative">
         <div className="flex-1 overflow-auto">
           <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[100px] text-center">Thao tác</TableHead>
-            <TableHead>Tên doanh nghiệp</TableHead>
-            <TableHead>Mã số thuế</TableHead>
-            <TableHead>Kỳ báo cáo</TableHead>
-            <TableHead>Trạng thái</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center py-8 text-gray-500">Đang tải dữ liệu...</TableCell>
-            </TableRow>
-          ) : currentYearData.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center py-8 text-gray-500">Không có dữ liệu cho năm {year}</TableCell>
-            </TableRow>
-          ) : (
-            paginatedData.map((item) => {
-              const status = item.report ? item.report.status : null;
-              const isDraft = status === "REPORTING";
-              return (
-                <TableRow key={item.period.id}>
-                  <TableCell>
-                    <div className="flex items-center justify-center gap-3">
-                      {item.report && (
-                        <button 
-                          title="Xem báo cáo"
-                          className="text-gray-400 hover:text-blue-600 transition-colors"
-                          onClick={() => router.push(`/dashboard/accidents/${item.report!.id}?mode=view`)}
-                        >
-                          <Eye size={18} />
-                        </button>
-                      )}
-                      {(isDraft || status === "REJECTED" || !item.report) && (
-                        <button 
-                          title={!item.report ? "Khai báo báo cáo" : "Sửa báo cáo"}
-                          className="text-gray-400 hover:text-blue-600 transition-colors"
-                          onClick={() => {
-                            if (!item.report) {
-                              handleInitReport(item.period.id);
-                            } else {
-                              router.push(`/dashboard/accidents/${item.report.id}`);
-                            }
-                          }}
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium text-gray-800">{enterpriseName}</TableCell>
-                  <TableCell className="text-gray-600">{taxCode}</TableCell>
-                  <TableCell className="text-gray-700">
-                    {item.period.periodType === "HALF_YEAR" ? "6 tháng" : "Cả năm"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${
-                        status === "REPORTING" ? "bg-gray-400" :
-                        status === "SUBMITTED" ? "bg-blue-500" :
-                        status === "REJECTED" ? "bg-red-500" :
-                        "bg-transparent border border-gray-300"
-                      }`} />
-                      <span className={`text-sm ${
-                        status === "REPORTING" ? "text-gray-500" :
-                        status === "SUBMITTED" ? "text-blue-600 font-medium" :
-                        status === "REJECTED" ? "text-red-600 font-medium" :
-                        "text-gray-400"
-                      }`}>
-                        {status === "REPORTING" ? "Đang báo cáo" :
-                         status === "SUBMITTED" ? "Đã tiếp nhận" :
-                         status === "REJECTED" ? "Bị trả lại (cần sửa và nộp lại)" :
-                         "Chờ báo cáo (chưa khởi tạo)"}
-                      </span>
-                    </div>
-                  </TableCell>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px] text-center">Thao tác</TableHead>
+                <TableHead>Tên doanh nghiệp</TableHead>
+                <TableHead>Mã số thuế</TableHead>
+                <TableHead>Kỳ báo cáo</TableHead>
+                <TableHead>Trạng thái</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">Đang tải dữ liệu...</TableCell>
                 </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
+              ) : currentYearData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">Không có dữ liệu cho năm {year}</TableCell>
+                </TableRow>
+              ) : (
+                paginatedData.map((item) => {
+                  const status = item.report ? item.report.status : null;
+                  const isDraft = status === "REPORTING";
+                  return (
+                    <TableRow key={item.period.id}>
+                      <TableCell>
+                        <div className="flex items-center justify-center gap-3">
+                          {item.report && (
+                            <button
+                              title="Xem báo cáo"
+                              className="text-gray-400 hover:text-blue-600 transition-colors"
+                              onClick={() => router.push(`/dashboard/accidents/${item.report!.id}?mode=view`)}
+                            >
+                              <Eye size={18} />
+                            </button>
+                          )}
+                          {(isDraft || status === "REJECTED" || !item.report) && (
+                            <button
+                              title={!item.report ? "Khai báo báo cáo" : "Sửa báo cáo"}
+                              className="text-gray-400 hover:text-blue-600 transition-colors"
+                              onClick={() => {
+                                if (!item.report) {
+                                  handleInitReport(item.period.id);
+                                } else {
+                                  router.push(`/dashboard/accidents/${item.report.id}`);
+                                }
+                              }}
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium text-gray-800">{enterpriseName}</TableCell>
+                      <TableCell className="text-gray-600">{taxCode}</TableCell>
+                      <TableCell className="text-gray-700">
+                        {item.period.periodType === "HALF_YEAR" ? "6 tháng" : "Cả năm"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${status === "REPORTING" ? "bg-gray-400" :
+                            status === "SUBMITTED" ? "bg-blue-500" :
+                              status === "APPROVED" ? "bg-green-500" :
+                                status === "REJECTED" ? "bg-red-500" :
+                                  "bg-transparent border border-gray-300"
+                            }`} />
+                          <span className={`text-sm ${status === "REPORTING" ? "text-gray-500" :
+                            status === "SUBMITTED" ? "text-blue-500 font-medium" :
+                              status === "APPROVED" ? "text-green-600 font-medium" :
+                                status === "REJECTED" ? "text-red-600 font-medium" :
+                                  "text-gray-400"
+                            }`}>
+                            {status === "REPORTING" ? "Đang báo cáo" :
+                              status === "SUBMITTED" ? "Chờ tiếp nhận" :
+                                status === "APPROVED" ? "Đã tiếp nhận" :
+                                  status === "REJECTED" ? "Bị trả lại (cần sửa và nộp lại)" :
+                                    "Chờ báo cáo (chưa khởi tạo)"}
+                          </span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
         </div>
 
         <div className="flex items-center justify-end border-t border-gray-100 bg-gray-50/30 shrink-0 pr-4">
