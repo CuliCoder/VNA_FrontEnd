@@ -111,7 +111,8 @@ export default function PeriodsViewPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectReason, setRejectReason] = useState("");
+  // Map<reportId, note> — một lý do riêng cho từng báo cáo
+  const [rejectReasons, setRejectReasons] = useState<Record<number, string>>({});
 
   const [submitting, setSubmitting] = useState(false);
   // ─── Load initial filters & locations ───────────────────────────────────────
@@ -202,26 +203,36 @@ export default function PeriodsViewPage() {
       setSubmitting(false);
     }
   };
-  const handleBulkReject = async () => {
+  // Mở modal từ chối: khởi tạo map lý do rỗng cho mỗi báo cáo được chọn
+  const handleOpenRejectModal = () => {
+    const init: Record<number, string> = {};
+    selectedIds.forEach(id => { init[id] = ""; });
+    setRejectReasons(init);
+    setShowRejectModal(true);
+  };
 
-    if (!rejectReason.trim()) {
+  const handleBulkReject = async () => {
+    // Kiểm tra không được để trống bất kỳ lý do nào
+    const emptyIds = Array.from(selectedIds).filter(
+      id => !rejectReasons[id]?.trim()
+    );
+
+    if (emptyIds.length > 0) {
       toast({
         title: "Thiếu lý do",
-        description: "Vui lòng nhập lý do từ chối.",
+        description: "Vui lòng nhập lý do từ chối cho tất cả doanh nghiệp.",
         variant: "destructive"
       });
-
       return;
     }
 
     try {
-
       setSubmitting(true);
 
       await departmentService.bulkReject(
         Array.from(selectedIds).map(id => ({
           reportId: id,
-          note: rejectReason
+          note: rejectReasons[id].trim()
         }))
       );
 
@@ -231,11 +242,10 @@ export default function PeriodsViewPage() {
       });
 
       setShowRejectModal(false);
-      setRejectReason("");
+      setRejectReasons({});
       setSelectedIds(new Set());
 
       fetchReports();
-
     } finally {
       setSubmitting(false);
     }
@@ -555,13 +565,23 @@ export default function PeriodsViewPage() {
       {/* Reject Modal */}
       <Modal
         open={showRejectModal}
-        onClose={() => setShowRejectModal(false)}
+        onClose={() => {
+          if (!submitting) {
+            setShowRejectModal(false);
+            setRejectReasons({});
+          }
+        }}
         title="Từ chối báo cáo"
+        size="lg"
         footer={
           <>
             <Button
               variant="outline"
-              onClick={() => setShowRejectModal(false)}
+              onClick={() => {
+                setShowRejectModal(false);
+                setRejectReasons({});
+              }}
+              disabled={submitting}
             >
               Hủy
             </Button>
@@ -569,24 +589,77 @@ export default function PeriodsViewPage() {
             <Button
               variant="danger"
               onClick={handleBulkReject}
-              disabled={submitting}
+              isLoading={submitting}
             >
-              Xác nhận
+              Xác nhận từ chối
             </Button>
           </>
         }
       >
-        <p className="text-sm text-gray-500 mb-3">
-          Lý do này sẽ được áp dụng cho tất cả {selectedIds.size} báo cáo đã chọn.
+        {/* Header mô tả */}
+        <p className="text-sm text-gray-500 mb-4">
+          Nhập lý do từ chối cho từng doanh nghiệp bên dưới.{" "}
+          <span className="text-red-500 font-medium">Tất cả lý do đều bắt buộc.</span>
         </p>
 
-        <textarea
-          className="w-full min-h-[120px] border rounded-md p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Nhập lý do từ chối..."
-          value={rejectReason}
-          onChange={(e) => setRejectReason(e.target.value)}
-        />
+        {/* Danh sách doanh nghiệp */}
+        <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+          {reports
+            .filter(r => selectedIds.has(r.reportId))
+            .map((r, idx) => {
+              const note = rejectReasons[r.reportId] ?? "";
+              const isEmpty = note.trim() === "";
+              return (
+                <div
+                  key={r.reportId}
+                  className="border border-gray-200 rounded-lg p-3 bg-gray-50"
+                >
+                  {/* Thông tin doanh nghiệp */}
+                  <div className="flex items-start gap-2 mb-2">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 text-xs font-semibold flex items-center justify-center mt-0.5">
+                      {idx + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">
+                        {r.enterpriseName || "—"}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        MST: {r.taxCode || "—"}
+                      </p>
+                    </div>
+                  </div>
 
+                  {/* Textarea lý do */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Lý do từ chối <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      rows={3}
+                      className={`w-full border rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-400 ${
+                        isEmpty
+                          ? "border-red-300 bg-red-50/40"
+                          : "border-gray-300 bg-white"
+                      }`}
+                      placeholder="Nhập lý do từ chối..."
+                      value={note}
+                      onChange={e =>
+                        setRejectReasons(prev => ({
+                          ...prev,
+                          [r.reportId]: e.target.value
+                        }))
+                      }
+                    />
+                    {isEmpty && (
+                      <p className="text-xs text-red-500 mt-1">
+                        Vui lòng nhập lý do từ chối.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+        </div>
       </Modal>
       {selectedIds.size > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
@@ -605,7 +678,7 @@ export default function PeriodsViewPage() {
 
             <Button
               variant="danger"
-              onClick={() => setShowRejectModal(true)}
+              onClick={handleOpenRejectModal}
               disabled={submitting}
             >
               Từ chối
