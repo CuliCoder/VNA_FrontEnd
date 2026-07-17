@@ -20,11 +20,11 @@ export default function ReportDeclarationPage() {
 
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState<any>(null);
-  
+
   // Tabs/Sections
   const [currentSection, setCurrentSection] = useState("company_info");
   const [accident1Tab, setAccident1Tab] = useState("summary");
-  
+
   const [showCancelWarning, setShowCancelWarning] = useState(false);
 
   const SECTION_ORDER = ["company_info", "accident_1", "accident_2", "overview"];
@@ -72,7 +72,7 @@ export default function ReportDeclarationPage() {
         setLoading(true);
         const data = await reportService.getReportDetails(Number(id));
         setReportData(data);
-        
+
         setEmployeeTotal(data.companyEmployeeTotal?.toString() || "");
         setFemaleTotal(data.femaleEmployeeTotal?.toString() || "");
         setSalaryFund(data.salaryFund?.toString() || "");
@@ -118,7 +118,7 @@ export default function ReportDeclarationPage() {
         if (allowanceSection) {
           setAccident2SummaryData(mapPayloadToSummary(allowanceSection));
         }
-        
+
         if (data.status === "SUBMITTED" || searchParams.get("mode") === "view") {
           setCurrentSection("overview");
         }
@@ -134,14 +134,14 @@ export default function ReportDeclarationPage() {
 
   const handleSave = async (silent = false) => {
     if (!id) return false;
-    
+
     if (!silent) {
       if (!validateCompanyInfo()) {
         toast.error("Vui lòng nhập đầy đủ và chính xác thông tin doanh nghiệp");
         if (currentSection !== "company_info") setCurrentSection("company_info");
         return false;
       }
-      
+
       const summary1Errs = validateAccidentSummary(accident1SummaryData);
       const detailErrsList: any[] = [];
       let hasDetailErrs = false;
@@ -185,7 +185,7 @@ export default function ReportDeclarationPage() {
       const isPropertyDamageNotEqual = sumDetailPropertyDamage !== (Number(accident1SummaryData.propertyDamage) || 0);
       const isLeaveDaysNotEqual = sumDetailLeaveDays !== (Number(accident1SummaryData.leaveDays) || 0);
       const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual || isMedicalCostNotEqual || isSalaryCostNotEqual || isCompensationCostNotEqual || isTotalCostNotEqual || isPropertyDamageNotEqual || isLeaveDaysNotEqual) && accident1DetailData.length > 0;
-      
+
       if (hasSumError) {
         detailErrsList.forEach(errs => {
           if (isNotEqual && !errs.totalAccidents) errs.totalAccidents = "Tổng số vụ không khớp với mục (1)";
@@ -200,7 +200,7 @@ export default function ReportDeclarationPage() {
         });
         hasDetailErrs = true;
       }
-      
+
       setAccident1SummaryErrors(summary1Errs);
       setAccident1DetailErrors(detailErrsList);
 
@@ -314,7 +314,7 @@ export default function ReportDeclarationPage() {
       toast.error("Vui lòng đính kèm báo cáo TNLĐ có dấu mộc công ty trước khi gửi");
       return;
     }
-    
+
     try {
       await reportService.submitReport(Number(id));
       toast.success("Đã gửi báo cáo thành công");
@@ -348,42 +348,42 @@ export default function ReportDeclarationPage() {
     if (!employeeTotal || Number(employeeTotal) <= 0) errs.employeeTotal = "Tổng số lao động phải lớn hơn 0";
     if (!femaleTotal) errs.femaleTotal = "Vui lòng nhập số lao động nữ";
     if (!salaryFund || Number(salaryFund) <= 0) errs.salaryFund = "Tổng quỹ lương phải lớn hơn 0";
-    
+
     if (employeeTotal && femaleTotal && Number(employeeTotal) < Number(femaleTotal)) {
       errs.femaleTotal = "Số lao động nữ không được lớn hơn tổng số lao động";
     }
-    
+
     setCompanyInfoErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const validateAccidentSummary = (data: AccidentSummaryData) => {
     const errs: Partial<Record<keyof AccidentSummaryData, string>> = {};
-    
+
     const requiredFields: (keyof AccidentSummaryData)[] = [
       "totalAccidents", "fatalAccidents", "multipleVictimsAccidents",
       "totalVictims", "femaleVictims", "deadVictims", "severeInjuredVictims",
       "unmanagedVictims", "unmanagedFemaleVictims", "unmanagedDeadVictims", "unmanagedSevereInjuredVictims",
       "medicalCost", "salaryCost", "compensationCost", "totalCost", "leaveDays"
     ];
-    
+
     for (const field of requiredFields) {
       if (!data[field]) errs[field] = "Vui lòng nhập trường này";
     }
-    
+
     const num = (val: string) => Number(val) || 0;
-    
+
     if (num(data.totalAccidents) > 0 && num(data.totalVictims) <= 0) {
       errs.totalVictims = "Tổng số người bị nạn phải lớn hơn 0";
     }
-    
+
     if (num(data.totalAccidents) < num(data.fatalAccidents)) {
       errs.fatalAccidents = "Không được lớn hơn tổng số vụ";
     }
     if (num(data.totalAccidents) < num(data.multipleVictimsAccidents)) {
       errs.multipleVictimsAccidents = "Không được lớn hơn tổng số vụ";
     }
-    
+
     if (num(data.totalVictims) < num(data.femaleVictims)) {
       errs.femaleVictims = "Không được lớn hơn tổng số người bị nạn";
     }
@@ -396,7 +396,7 @@ export default function ReportDeclarationPage() {
     if (num(data.totalVictims) < Math.max(num(data.femaleVictims), num(data.deadVictims), num(data.severeInjuredVictims))) {
       errs.totalVictims = "Phải >= số lao động nữ, người chết và bị thương nặng";
     }
-    
+
     if (num(data.unmanagedVictims) < num(data.unmanagedFemaleVictims)) {
       errs.unmanagedFemaleVictims = "Không được lớn hơn tổng số (không QL)";
     }
@@ -409,11 +409,11 @@ export default function ReportDeclarationPage() {
     if (num(data.unmanagedVictims) < Math.max(num(data.unmanagedFemaleVictims), num(data.unmanagedDeadVictims), num(data.unmanagedSevereInjuredVictims))) {
       errs.unmanagedVictims = "Phải >= số nữ, chết và thương nặng (không QL)";
     }
-    
+
     if (num(data.totalCost) < (num(data.medicalCost) + num(data.salaryCost) + num(data.compensationCost))) {
       errs.totalCost = "Phải >= tổng các chi phí thành phần";
     }
-    
+
     return errs;
   };
 
@@ -434,23 +434,23 @@ export default function ReportDeclarationPage() {
         let sumDetailAccidents = 0;
         let sumDetailVictims = 0;
         let sumDetailUnmanagedVictims = 0;
-      let sumDetailMedicalCost = 0;
-      let sumDetailSalaryCost = 0;
-      let sumDetailCompensationCost = 0;
-      let sumDetailTotalCost = 0;
-      let sumDetailPropertyDamage = 0;
-      let sumDetailLeaveDays = 0;
+        let sumDetailMedicalCost = 0;
+        let sumDetailSalaryCost = 0;
+        let sumDetailCompensationCost = 0;
+        let sumDetailTotalCost = 0;
+        let sumDetailPropertyDamage = 0;
+        let sumDetailLeaveDays = 0;
 
         accident1DetailData.forEach((detail, index) => {
           sumDetailAccidents += Number(detail.summary.totalAccidents) || 0;
           sumDetailVictims += Number(detail.summary.totalVictims) || 0;
           sumDetailUnmanagedVictims += Number(detail.summary.unmanagedVictims) || 0;
-        sumDetailMedicalCost += Number(detail.summary.medicalCost) || 0;
-        sumDetailSalaryCost += Number(detail.summary.salaryCost) || 0;
-        sumDetailCompensationCost += Number(detail.summary.compensationCost) || 0;
-        sumDetailTotalCost += Number(detail.summary.totalCost) || 0;
-        sumDetailPropertyDamage += Number(detail.summary.propertyDamage) || 0;
-        sumDetailLeaveDays += Number(detail.summary.leaveDays) || 0;
+          sumDetailMedicalCost += Number(detail.summary.medicalCost) || 0;
+          sumDetailSalaryCost += Number(detail.summary.salaryCost) || 0;
+          sumDetailCompensationCost += Number(detail.summary.compensationCost) || 0;
+          sumDetailTotalCost += Number(detail.summary.totalCost) || 0;
+          sumDetailPropertyDamage += Number(detail.summary.propertyDamage) || 0;
+          sumDetailLeaveDays += Number(detail.summary.leaveDays) || 0;
           const errs: any = validateAccidentSummary(detail.summary);
           if (!detail.cause) errs.cause = "Vui lòng chọn nguyên nhân";
           if (!detail.factor) errs.factor = "Vui lòng chọn yếu tố";
@@ -465,13 +465,13 @@ export default function ReportDeclarationPage() {
         const isVictimsNotEqual = sumDetailVictims !== (Number(accident1SummaryData.totalVictims) || 0);
         const isUnmanagedNotEqual = sumDetailUnmanagedVictims !== (Number(accident1SummaryData.unmanagedVictims) || 0);
         const isMedicalCostNotEqual = sumDetailMedicalCost !== (Number(accident1SummaryData.medicalCost) || 0);
-      const isSalaryCostNotEqual = sumDetailSalaryCost !== (Number(accident1SummaryData.salaryCost) || 0);
-      const isCompensationCostNotEqual = sumDetailCompensationCost !== (Number(accident1SummaryData.compensationCost) || 0);
-      const isTotalCostNotEqual = sumDetailTotalCost !== (Number(accident1SummaryData.totalCost) || 0);
-      const isPropertyDamageNotEqual = sumDetailPropertyDamage !== (Number(accident1SummaryData.propertyDamage) || 0);
-      const isLeaveDaysNotEqual = sumDetailLeaveDays !== (Number(accident1SummaryData.leaveDays) || 0);
-      const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual || isMedicalCostNotEqual || isSalaryCostNotEqual || isCompensationCostNotEqual || isTotalCostNotEqual || isPropertyDamageNotEqual || isLeaveDaysNotEqual) && accident1DetailData.length > 0;
-        
+        const isSalaryCostNotEqual = sumDetailSalaryCost !== (Number(accident1SummaryData.salaryCost) || 0);
+        const isCompensationCostNotEqual = sumDetailCompensationCost !== (Number(accident1SummaryData.compensationCost) || 0);
+        const isTotalCostNotEqual = sumDetailTotalCost !== (Number(accident1SummaryData.totalCost) || 0);
+        const isPropertyDamageNotEqual = sumDetailPropertyDamage !== (Number(accident1SummaryData.propertyDamage) || 0);
+        const isLeaveDaysNotEqual = sumDetailLeaveDays !== (Number(accident1SummaryData.leaveDays) || 0);
+        const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual || isMedicalCostNotEqual || isSalaryCostNotEqual || isCompensationCostNotEqual || isTotalCostNotEqual || isPropertyDamageNotEqual || isLeaveDaysNotEqual) && accident1DetailData.length > 0;
+
         if (hasSumError) {
           detailErrsList.forEach(errs => {
             if (isNotEqual && !errs.totalAccidents) errs.totalAccidents = "Tổng số vụ không khớp với mục (1)";
@@ -486,7 +486,7 @@ export default function ReportDeclarationPage() {
           });
           hasDetailErrs = true;
         }
-        
+
         setAccident1SummaryErrors(summary1Errs);
         setAccident1DetailErrors(detailErrsList);
 
@@ -527,23 +527,23 @@ export default function ReportDeclarationPage() {
           let sumDetailAccidents = 0;
           let sumDetailVictims = 0;
           let sumDetailUnmanagedVictims = 0;
-      let sumDetailMedicalCost = 0;
-      let sumDetailSalaryCost = 0;
-      let sumDetailCompensationCost = 0;
-      let sumDetailTotalCost = 0;
-      let sumDetailPropertyDamage = 0;
-      let sumDetailLeaveDays = 0;
+          let sumDetailMedicalCost = 0;
+          let sumDetailSalaryCost = 0;
+          let sumDetailCompensationCost = 0;
+          let sumDetailTotalCost = 0;
+          let sumDetailPropertyDamage = 0;
+          let sumDetailLeaveDays = 0;
 
           accident1DetailData.forEach((detail, index) => {
             sumDetailAccidents += Number(detail.summary.totalAccidents) || 0;
             sumDetailVictims += Number(detail.summary.totalVictims) || 0;
             sumDetailUnmanagedVictims += Number(detail.summary.unmanagedVictims) || 0;
-        sumDetailMedicalCost += Number(detail.summary.medicalCost) || 0;
-        sumDetailSalaryCost += Number(detail.summary.salaryCost) || 0;
-        sumDetailCompensationCost += Number(detail.summary.compensationCost) || 0;
-        sumDetailTotalCost += Number(detail.summary.totalCost) || 0;
-        sumDetailPropertyDamage += Number(detail.summary.propertyDamage) || 0;
-        sumDetailLeaveDays += Number(detail.summary.leaveDays) || 0;
+            sumDetailMedicalCost += Number(detail.summary.medicalCost) || 0;
+            sumDetailSalaryCost += Number(detail.summary.salaryCost) || 0;
+            sumDetailCompensationCost += Number(detail.summary.compensationCost) || 0;
+            sumDetailTotalCost += Number(detail.summary.totalCost) || 0;
+            sumDetailPropertyDamage += Number(detail.summary.propertyDamage) || 0;
+            sumDetailLeaveDays += Number(detail.summary.leaveDays) || 0;
             const errs: any = validateAccidentSummary(detail.summary);
             if (!detail.cause) errs.cause = "Vui lòng chọn nguyên nhân";
             if (!detail.factor) errs.factor = "Vui lòng chọn yếu tố";
@@ -558,13 +558,13 @@ export default function ReportDeclarationPage() {
           const isVictimsNotEqual = sumDetailVictims !== (Number(accident1SummaryData.totalVictims) || 0);
           const isUnmanagedNotEqual = sumDetailUnmanagedVictims !== (Number(accident1SummaryData.unmanagedVictims) || 0);
           const isMedicalCostNotEqual = sumDetailMedicalCost !== (Number(accident1SummaryData.medicalCost) || 0);
-      const isSalaryCostNotEqual = sumDetailSalaryCost !== (Number(accident1SummaryData.salaryCost) || 0);
-      const isCompensationCostNotEqual = sumDetailCompensationCost !== (Number(accident1SummaryData.compensationCost) || 0);
-      const isTotalCostNotEqual = sumDetailTotalCost !== (Number(accident1SummaryData.totalCost) || 0);
-      const isPropertyDamageNotEqual = sumDetailPropertyDamage !== (Number(accident1SummaryData.propertyDamage) || 0);
-      const isLeaveDaysNotEqual = sumDetailLeaveDays !== (Number(accident1SummaryData.leaveDays) || 0);
-      const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual || isMedicalCostNotEqual || isSalaryCostNotEqual || isCompensationCostNotEqual || isTotalCostNotEqual || isPropertyDamageNotEqual || isLeaveDaysNotEqual) && accident1DetailData.length > 0;
-          
+          const isSalaryCostNotEqual = sumDetailSalaryCost !== (Number(accident1SummaryData.salaryCost) || 0);
+          const isCompensationCostNotEqual = sumDetailCompensationCost !== (Number(accident1SummaryData.compensationCost) || 0);
+          const isTotalCostNotEqual = sumDetailTotalCost !== (Number(accident1SummaryData.totalCost) || 0);
+          const isPropertyDamageNotEqual = sumDetailPropertyDamage !== (Number(accident1SummaryData.propertyDamage) || 0);
+          const isLeaveDaysNotEqual = sumDetailLeaveDays !== (Number(accident1SummaryData.leaveDays) || 0);
+          const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual || isMedicalCostNotEqual || isSalaryCostNotEqual || isCompensationCostNotEqual || isTotalCostNotEqual || isPropertyDamageNotEqual || isLeaveDaysNotEqual) && accident1DetailData.length > 0;
+
           if (hasSumError) {
             detailErrsList.forEach(errs => {
               if (isNotEqual && !errs.totalAccidents) errs.totalAccidents = "Tổng số vụ không khớp với mục (1)";
@@ -579,7 +579,7 @@ export default function ReportDeclarationPage() {
             });
             hasDetailErrs = true;
           }
-          
+
           setAccident1SummaryErrors(summaryErrs);
           setAccident1DetailErrors(detailErrsList);
 
@@ -605,7 +605,7 @@ export default function ReportDeclarationPage() {
         }
       }
     }
-    
+
     setCurrentSection(newSection);
   };
 
@@ -622,7 +622,7 @@ export default function ReportDeclarationPage() {
       }
     } else if (currentSection === "accident_1") {
       const summaryErrs = validateAccidentSummary(accident1SummaryData);
-      
+
       const detailErrsList: any[] = [];
       let hasDetailErrs = false;
       let sumDetailAccidents = 0;
@@ -667,7 +667,7 @@ export default function ReportDeclarationPage() {
       const isPropertyDamageNotEqual = sumDetailPropertyDamage !== (Number(accident1SummaryData.propertyDamage) || 0);
       const isLeaveDaysNotEqual = sumDetailLeaveDays !== (Number(accident1SummaryData.leaveDays) || 0);
       const hasSumError = (isNotEqual || isVictimsNotEqual || isUnmanagedNotEqual || isMedicalCostNotEqual || isSalaryCostNotEqual || isCompensationCostNotEqual || isTotalCostNotEqual || isPropertyDamageNotEqual || isLeaveDaysNotEqual) && accident1DetailData.length > 0;
-      
+
       if (hasSumError) {
         detailErrsList.forEach(errs => {
           if (isNotEqual && !errs.totalAccidents) errs.totalAccidents = "Tổng số vụ không khớp với mục (1)";
@@ -701,7 +701,7 @@ export default function ReportDeclarationPage() {
     } else if (currentSection === "accident_2") {
       const summaryErrs = validateAccidentSummary(accident2SummaryData);
       setAccident2SummaryErrors(summaryErrs);
-      
+
       if (Object.keys(summaryErrs).length > 0) {
         toast.error("Vui lòng nhập đầy đủ và chính xác thông tin các vụ tai nạn");
         return;
@@ -737,12 +737,12 @@ export default function ReportDeclarationPage() {
       <div className="flex items-center justify-between mb-4 print:hidden">
         <h1 className="text-lg font-semibold text-gray-800">Báo cáo định kỳ Tai nạn lao động</h1>
         <div className="flex items-center gap-3">
-          <input 
-            value={reportData.reportPeriod?.year || ""} 
-            disabled 
+          <input
+            value={reportData.reportPeriod?.year || ""}
+            disabled
             className="w-24 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm text-center shadow-sm"
           />
-          <button 
+          <button
             className="px-4 py-2 border border-gray-300 bg-white rounded-md text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm"
             onClick={() => {
               if (currentSection === "overview" || isReadOnly) {
@@ -754,17 +754,17 @@ export default function ReportDeclarationPage() {
           >
             Huỷ bỏ
           </button>
-          
+
           {currentSection !== "overview" ? (
             <>
-              <button 
+              <button
                 className="px-4 py-2 border border-blue-200 bg-white text-blue-600 rounded-md text-sm font-medium hover:bg-blue-50 transition-colors flex items-center shadow-sm"
                 onClick={handleNextSection}
               >
                 Tiếp tục <ChevronRight className="w-4 h-4 ml-1" />
               </button>
               {!isReadOnly && (
-                <button 
+                <button
                   className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center shadow-sm"
                   onClick={() => handleSave(false)}
                 >
@@ -774,14 +774,14 @@ export default function ReportDeclarationPage() {
             </>
           ) : (
             <>
-              <button 
+              <button
                 className="px-4 py-2 border border-blue-200 bg-white text-blue-600 rounded-md text-sm font-medium hover:bg-blue-50 transition-colors flex items-center shadow-sm"
                 onClick={handleExportWord}
               >
                 <Printer className="w-4 h-4 mr-2" /> Tải báo cáo
               </button>
               {!isReadOnly && (
-                <button 
+                <button
                   className={`px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center shadow-sm ${!reportData?.attachedFilePath ? 'opacity-50 cursor-not-allowed' : ''}`}
                   onClick={handleSubmitReport}
                   disabled={!reportData?.attachedFilePath}
@@ -797,230 +797,230 @@ export default function ReportDeclarationPage() {
       <div className="flex flex-col flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative print:overflow-visible print:border-none print:shadow-none print:rounded-none">
         <div className="p-6 flex-1 overflow-auto print:overflow-visible print:p-0">
           {/* Section Selector */}
-        {!isReadOnly && (
-        <div className="mb-8 print:hidden">
-          <label className="text-gray-500 text-xs uppercase tracking-wider mb-2 block font-medium">
-            Chọn mục báo cáo
-          </label>
-          <select 
-            className="w-full md:max-w-2xl border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={currentSection}
-            onChange={(e) => handleSectionChange(e.target.value)}
-          >
-            <option value="company_info">Thông tin doanh nghiệp</option>
-            <option value="accident_1">1. Tai nạn lao động</option>
-            <option value="accident_2">2. Tai nạn lao động được hưởng trợ cấp theo quy định tại Khoản 2 Điều 39 Luật ATVSLĐ</option>
-            <option value="overview">Xem tổng quan báo cáo tai nạn lao động</option>
-          </select>
-        </div>
-        )}
+          {!isReadOnly && (
+            <div className="mb-8 print:hidden">
+              <label className="text-gray-500 text-xs uppercase tracking-wider mb-2 block font-medium">
+                Chọn mục báo cáo
+              </label>
+              <select
+                className="w-full md:max-w-2xl border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={currentSection}
+                onChange={(e) => handleSectionChange(e.target.value)}
+              >
+                <option value="company_info">Thông tin doanh nghiệp</option>
+                <option value="accident_1">1. Tai nạn lao động</option>
+                <option value="accident_2">2. Tai nạn lao động được hưởng trợ cấp theo quy định tại Khoản 2 Điều 39 Luật ATVSLĐ</option>
+                <option value="overview">Xem tổng quan báo cáo tai nạn lao động</option>
+              </select>
+            </div>
+          )}
 
-        {/* Section Content */}
-        {currentSection === "company_info" && (
-          <div className="space-y-6">
-            <h2 className="font-semibold text-gray-800">1. Thông tin công ty</h2>
-            <p className="text-red-500 text-sm font-medium">
-              *** Lưu ý: nhập tổng quỹ lương 6 tháng khi khai báo TNLĐ 6 tháng hoặc tổng quỹ lương 12 tháng khi khai báo TNLĐ cả năm
-            </p>
+          {/* Section Content */}
+          {currentSection === "company_info" && (
+            <div className="space-y-6">
+              <h2 className="font-semibold text-gray-800">1. Thông tin công ty</h2>
+              <p className="text-red-500 text-sm font-medium">
+                *** Lưu ý: nhập tổng quỹ lương 6 tháng khi khai báo TNLĐ 6 tháng hoặc tổng quỹ lương 12 tháng khi khai báo TNLĐ cả năm
+              </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Disabled Enterprise Fields */}
-              <div className="space-y-2 flex flex-col">
-                <label className="text-gray-500 text-sm font-medium">Tên công ty</label>
-                <input 
-                  value={enterpriseProfile?.name || ""} 
-                  disabled 
-                  className="bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-500 cursor-not-allowed" 
-                />
-              </div>
-              <div className="space-y-2 flex flex-col">
-                <label className="text-gray-500 text-sm font-medium">Loại hình công ty</label>
-                <input 
-                  value={enterpriseProfile?.businessType?.name || ""} 
-                  disabled 
-                  className="bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-500 cursor-not-allowed" 
-                />
-              </div>
-              <div className="space-y-2 flex flex-col">
-                <label className="text-gray-500 text-sm font-medium">Ngành nghề kinh doanh</label>
-                <input 
-                  value={enterpriseProfile?.businessField?.name || ""} 
-                  disabled 
-                  className="bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-500 cursor-not-allowed" 
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Disabled Enterprise Fields */}
+                <div className="space-y-2 flex flex-col">
+                  <label className="text-gray-500 text-sm font-medium">Tên công ty</label>
+                  <input
+                    value={enterpriseProfile?.name || ""}
+                    disabled
+                    className="bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
+                  />
+                </div>
+                <div className="space-y-2 flex flex-col">
+                  <label className="text-gray-500 text-sm font-medium">Loại hình công ty</label>
+                  <input
+                    value={enterpriseProfile?.businessType?.name || ""}
+                    disabled
+                    className="bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
+                  />
+                </div>
+                <div className="space-y-2 flex flex-col">
+                  <label className="text-gray-500 text-sm font-medium">Ngành nghề kinh doanh</label>
+                  <input
+                    value={enterpriseProfile?.businessField?.name || ""}
+                    disabled
+                    className="bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
+                  />
+                </div>
 
-              {/* Editable Fields */}
-              <div className="space-y-2 flex flex-col">
-                <label className="text-gray-700 text-sm font-medium">
-                  Tổng số lao động của cơ sở <span className="text-red-500">*</span>
-                </label>
-                <input 
-                  type="number"
-                  min="0"
-                  value={employeeTotal} 
-                  onChange={(e) => {
-                    let val = e.target.value;
-                    if (val.startsWith('-')) val = val.replace('-', '');
-                    setEmployeeTotal(val);
-                    if (companyInfoErrors.employeeTotal) setCompanyInfoErrors({...companyInfoErrors, employeeTotal: undefined});
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
-                  }}
-                  placeholder="Nhập tổng số lao động"
-                  disabled={isReadOnly}
-                  className={`border ${companyInfoErrors.employeeTotal ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 ${isReadOnly ? 'bg-gray-50 cursor-not-allowed text-gray-500' : ''}`}
-                />
-                {companyInfoErrors.employeeTotal && <p className="text-red-500 text-xs">{companyInfoErrors.employeeTotal}</p>}
-              </div>
-              <div className="space-y-2 flex flex-col">
-                <label className="text-gray-700 text-sm font-medium">
-                  Tổng số lao động nữ <span className="text-red-500">*</span>
-                </label>
-                <input 
-                  type="number"
-                  min="0"
-                  value={femaleTotal} 
-                  onChange={(e) => {
-                    let val = e.target.value;
-                    if (val.startsWith('-')) val = val.replace('-', '');
-                    setFemaleTotal(val);
-                    if (companyInfoErrors.femaleTotal) setCompanyInfoErrors({...companyInfoErrors, femaleTotal: undefined});
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
-                  }}
-                  placeholder="Nhập số lao động nữ"
-                  disabled={isReadOnly}
-                  className={`border ${companyInfoErrors.femaleTotal ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 ${isReadOnly ? 'bg-gray-50 cursor-not-allowed text-gray-500' : ''}`}
-                />
-                {companyInfoErrors.femaleTotal && <p className="text-red-500 text-xs">{companyInfoErrors.femaleTotal}</p>}
-              </div>
-              <div className="space-y-2 flex flex-col">
-                <label className="text-gray-700 text-sm font-medium">
-                  Tổng quỹ lương <span className="text-red-500">*</span>
-                </label>
-                <div className="relative flex">
-                  <input 
-                    type="text"
-                    value={formatCurrency(salaryFund)} 
+                {/* Editable Fields */}
+                <div className="space-y-2 flex flex-col">
+                  <label className="text-gray-700 text-sm font-medium">
+                    Tổng số lao động của cơ sở <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={employeeTotal}
                     onChange={(e) => {
                       let val = e.target.value;
                       if (val.startsWith('-')) val = val.replace('-', '');
-                      setSalaryFund(parseCurrency(val));
-                      if (companyInfoErrors.salaryFund) setCompanyInfoErrors({...companyInfoErrors, salaryFund: undefined});
+                      setEmployeeTotal(val);
+                      if (companyInfoErrors.employeeTotal) setCompanyInfoErrors({ ...companyInfoErrors, employeeTotal: undefined });
                     }}
                     onKeyDown={(e) => {
                       if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
                     }}
-                    placeholder="Nhập tổng quỹ lương"
+                    placeholder="Nhập tổng số lao động"
                     disabled={isReadOnly}
-                    className={`border ${companyInfoErrors.salaryFund ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} rounded-md px-3 py-2 pr-16 text-sm focus:outline-none focus:ring-2 flex-1 ${isReadOnly ? 'bg-gray-50 cursor-not-allowed text-gray-500' : ''}`}
+                    className={`border ${companyInfoErrors.employeeTotal ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 ${isReadOnly ? 'bg-gray-50 cursor-not-allowed text-gray-500' : ''}`}
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">
-                    (1.000đ)
-                  </span>
+                  {companyInfoErrors.employeeTotal && <p className="text-red-500 text-xs">{companyInfoErrors.employeeTotal}</p>}
                 </div>
-                {companyInfoErrors.salaryFund && <p className="text-red-500 text-xs">{companyInfoErrors.salaryFund}</p>}
+                <div className="space-y-2 flex flex-col">
+                  <label className="text-gray-700 text-sm font-medium">
+                    Tổng số lao động nữ <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={femaleTotal}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      if (val.startsWith('-')) val = val.replace('-', '');
+                      setFemaleTotal(val);
+                      if (companyInfoErrors.femaleTotal) setCompanyInfoErrors({ ...companyInfoErrors, femaleTotal: undefined });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
+                    }}
+                    placeholder="Nhập số lao động nữ"
+                    disabled={isReadOnly}
+                    className={`border ${companyInfoErrors.femaleTotal ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 ${isReadOnly ? 'bg-gray-50 cursor-not-allowed text-gray-500' : ''}`}
+                  />
+                  {companyInfoErrors.femaleTotal && <p className="text-red-500 text-xs">{companyInfoErrors.femaleTotal}</p>}
+                </div>
+                <div className="space-y-2 flex flex-col">
+                  <label className="text-gray-700 text-sm font-medium">
+                    Tổng quỹ lương <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative flex">
+                    <input
+                      type="text"
+                      value={formatCurrency(salaryFund)}
+                      onChange={(e) => {
+                        let val = e.target.value;
+                        if (val.startsWith('-')) val = val.replace('-', '');
+                        setSalaryFund(parseCurrency(val));
+                        if (companyInfoErrors.salaryFund) setCompanyInfoErrors({ ...companyInfoErrors, salaryFund: undefined });
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
+                      }}
+                      placeholder="Nhập tổng quỹ lương"
+                      disabled={isReadOnly}
+                      className={`border ${companyInfoErrors.salaryFund ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} rounded-md px-3 py-2 pr-16 text-sm focus:outline-none focus:ring-2 flex-1 ${isReadOnly ? 'bg-gray-50 cursor-not-allowed text-gray-500' : ''}`}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">
+                      (1.000đ)
+                    </span>
+                  </div>
+                  {companyInfoErrors.salaryFund && <p className="text-red-500 text-xs">{companyInfoErrors.salaryFund}</p>}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {currentSection === "accident_1" && (
-          <div className="space-y-6">
-            <h2 className="font-semibold text-gray-800">**** Doanh nghiệp xảy ra tai nạn lao động vui lòng nhập theo từng bước</h2>
-            
-            {/* Tabs for accident 1 */}
-            <div className="flex border-b border-gray-200">
-              <button 
-                className={`px-4 py-2 text-sm font-medium border-b-2 ${accident1Tab === 'summary' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                onClick={() => setAccident1Tab('summary')}
-              >
-                (1) Tổng số vụ tai nạn lao động
-              </button>
-              <button 
-                className={`px-4 py-2 text-sm font-medium border-b-2 ${accident1Tab === 'details' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                onClick={() => {
-                  if (accident1Tab === 'summary' && !isReadOnly) {
-                    const summaryErrs = validateAccidentSummary(accident1SummaryData);
-                    setAccident1SummaryErrors(summaryErrs);
-                    if (Object.keys(summaryErrs).length > 0) {
-                      toast.error("Vui lòng nhập đầy đủ và chính xác thông tin (1) Tổng số vụ");
-                      return;
-                    }
-                  }
-                  setAccident1Tab('details');
-                }}
-              >
-                (2) Chi tiết các vụ tai nạn lao động
-              </button>
-            </div>
+          {currentSection === "accident_1" && (
+            <div className="space-y-6">
+              <h2 className="font-semibold text-gray-800">**** Doanh nghiệp xảy ra tai nạn lao động vui lòng nhập theo từng bước</h2>
 
-            <div className="pt-4">
-              {accident1Tab === 'summary' && (
-                <AccidentSummaryForm 
-                  isReadOnly={isReadOnly} 
-                  data={accident1SummaryData}
-                  onChange={(f, v) => setAccident1SummaryData(prev => ({...prev, [f]: v}))}
-                  errors={accident1SummaryErrors}
-                />
-              )}
-              {accident1Tab === 'details' && (
-                <AccidentDetailForm 
-                  isReadOnly={isReadOnly} 
-                  totalAccidents={Number(accident1SummaryData.totalAccidents) || 0}
-                  data={accident1DetailData}
-                  onChange={(index, field, value, isSummaryField) => {
-                    setAccident1DetailData(prevData => {
-                      const newData = [...prevData];
-                      if (isSummaryField) {
-                        newData[index] = {
-                          ...newData[index],
-                          summary: {
-                            ...newData[index].summary,
-                            [field]: value
-                          }
-                        };
-                      } else {
-                        newData[index] = {
-                          ...newData[index],
-                          [field]: value
-                        };
+              {/* Tabs for accident 1 */}
+              <div className="flex border-b border-gray-200">
+                <button
+                  className={`px-4 py-2 text-sm font-medium border-b-2 ${accident1Tab === 'summary' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                  onClick={() => setAccident1Tab('summary')}
+                >
+                  (1) Tổng số vụ tai nạn lao động
+                </button>
+                <button
+                  className={`px-4 py-2 text-sm font-medium border-b-2 ${accident1Tab === 'details' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                  onClick={() => {
+                    if (accident1Tab === 'summary' && !isReadOnly) {
+                      const summaryErrs = validateAccidentSummary(accident1SummaryData);
+                      setAccident1SummaryErrors(summaryErrs);
+                      if (Object.keys(summaryErrs).length > 0) {
+                        toast.error("Vui lòng nhập đầy đủ và chính xác thông tin (1) Tổng số vụ");
+                        return;
                       }
-                      return newData;
-                    });
+                    }
+                    setAccident1Tab('details');
                   }}
-                  errors={accident1DetailErrors}
-                />
-              )}
+                >
+                  (2) Chi tiết các vụ tai nạn lao động
+                </button>
+              </div>
+
+              <div className="pt-4">
+                {accident1Tab === 'summary' && (
+                  <AccidentSummaryForm
+                    isReadOnly={isReadOnly}
+                    data={accident1SummaryData}
+                    onChange={(f, v) => setAccident1SummaryData(prev => ({ ...prev, [f]: v }))}
+                    errors={accident1SummaryErrors}
+                  />
+                )}
+                {accident1Tab === 'details' && (
+                  <AccidentDetailForm
+                    isReadOnly={isReadOnly}
+                    totalAccidents={Number(accident1SummaryData.totalAccidents) || 0}
+                    data={accident1DetailData}
+                    onChange={(index, field, value, isSummaryField) => {
+                      setAccident1DetailData(prevData => {
+                        const newData = [...prevData];
+                        if (isSummaryField) {
+                          newData[index] = {
+                            ...newData[index],
+                            summary: {
+                              ...newData[index].summary,
+                              [field]: value
+                            }
+                          };
+                        } else {
+                          newData[index] = {
+                            ...newData[index],
+                            [field]: value
+                          };
+                        }
+                        return newData;
+                      });
+                    }}
+                    errors={accident1DetailErrors}
+                  />
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {currentSection === "accident_2" && (
-          <div className="space-y-6">
-            <AccidentSummaryForm 
-              isReadOnly={isReadOnly} 
-              data={accident2SummaryData}
-              onChange={(f, v) => setAccident2SummaryData(prev => ({...prev, [f]: v}))}
-              errors={accident2SummaryErrors}
+          {currentSection === "accident_2" && (
+            <div className="space-y-6">
+              <AccidentSummaryForm
+                isReadOnly={isReadOnly}
+                data={accident2SummaryData}
+                onChange={(f, v) => setAccident2SummaryData(prev => ({ ...prev, [f]: v }))}
+                errors={accident2SummaryErrors}
+              />
+            </div>
+          )}
+
+          {currentSection === "overview" && (
+            <AccidentOverview
+              reportData={reportData}
+              accident1SummaryData={accident1SummaryData}
+              accident1DetailData={accident1DetailData}
+              accident2SummaryData={accident2SummaryData}
+              enterpriseProfile={enterpriseProfile}
+              onUploadFile={handleUploadFile}
+              isReadOnly={isReadOnly}
             />
-          </div>
-        )}
-
-        {currentSection === "overview" && (
-          <AccidentOverview 
-            reportData={reportData}
-            accident1SummaryData={accident1SummaryData}
-            accident1DetailData={accident1DetailData}
-            accident2SummaryData={accident2SummaryData}
-            enterpriseProfile={enterpriseProfile}
-            onUploadFile={handleUploadFile}
-            isReadOnly={isReadOnly}
-          />
-        )}
+          )}
         </div>
       </div>
       {/* Cancel Warning Popup */}
