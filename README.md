@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tên Dự Án
 
-## Getting Started
+Mô tả ngắn gọn về dự án của bạn.
 
-First, run the development server:
+---
+
+## Yêu cầu
+
+- Node.js >= 18.x
+- npm / yarn / pnpm
+
+---
+
+## Cài đặt & Chạy
 
 ```bash
+git clone https://github.com/your-org/your-repo.git
+cd your-repo
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Truy cập [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Biến môi trường
 
-## Learn More
+Tạo file `.env` ở thư mục gốc:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api
+```
+> Nên chạy khác port của server backend (pnpm dev -p PORT VD: pnpm dev -p 3001)
+> Không commit file `.env` lên Git.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
+| Lệnh | Mô tả |
+|------|-------|
+| `npm run dev` | Chạy development server |
+| `npm run build` | Build production |
+| `npm run start` | Chạy production server |
+| `npm run lint` | Kiểm tra lỗi ESLint |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Cấu trúc thư mục
+
+```
+├── app/                  # App Router (Next.js 13+)
+│   ├── (auth)/           # Trang login, register...
+│   ├── dashboard/        # Trang private
+│   └── layout.tsx
+├── components/           # UI components dùng chung
+├── constants/            # Config, hằng số
+├── lib/                  # Auth helpers, storage, api client
+├── services/             # Gọi API
+├── types/                # TypeScript types
+└── middleware.ts         # Xử lý redirect auth
+```
+
+---
+
+## Quy ước làm việc
+
+- **Branch:** `feature/ten-tinh-nang` hoặc `fix/ten-loi`
+- **Commit:** `feat: ...` / `fix: ...` / `chore: ...`
+- **PR:** không push thẳng lên `main`

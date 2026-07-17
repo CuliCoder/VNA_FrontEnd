@@ -41,11 +41,9 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
-
     const is401 = error.response?.status === 401;
     const alreadyRetried = originalRequest._retry;
     const skipRefresh = isAuthEndpoint(originalRequest.url);
-
     if (is401 && !alreadyRetried && !skipRefresh) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -55,10 +53,8 @@ apiClient.interceptors.response.use(
           });
         });
       }
-
       originalRequest._retry = true;
       isRefreshing = true;
-
       try {
         await axios.post<RefreshTokenResponse>(
           `${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.REFRESH_TOKEN}`,
@@ -81,7 +77,6 @@ apiClient.interceptors.response.use(
         } catch (e) {
           // ignore
         }
-
         const publicRoutes = ["/login", "/register", "/ForgotPassword"];
         const isPublic = publicRoutes.some((r) =>
           window.location.pathname.startsWith(r),
@@ -94,7 +89,6 @@ apiClient.interceptors.response.use(
         isRefreshing = false;
       }
     }
-
     const apiError: ApiError = {
       status: error.response?.status ?? 0,
       message:
